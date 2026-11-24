@@ -18,7 +18,7 @@ export default async function BrandingPage() {
           <label>Warna utama<input type="color" name="primaryColor" defaultValue={election.primaryColor ?? "#12303b"} /></label>
           <label>Logo organisasi<input type="file" name="logo" accept="image/jpeg,image/png,image/webp" /></label>
         </BallotForm>
-        <p className="mut my-2">Logo JPEG, PNG atau WebP, maksimum 5 MB.</p>
+        <p className="mut my-2">Logo JPEG, PNG atau WebP, maksimum {process.env.VERCEL === "1" ? 4 : 5} MB.</p>
         <BallotForm electionId={election.id} action="branding-reset" label="Pulihkan penjenamaan lalai" plain />
       </section>
     </>

@@ -74,7 +74,7 @@ export default async function Admin() {
                     electionId={election.id} action="candidate-update" target={{ name: "candidateId", id: candidate.id }} label="Simpan calon">
                     <label>Nama calon<input name="name" defaultValue={candidate.name} maxLength={120} required /></label>
                     <label>Bio ringkas<textarea name="bio" defaultValue={candidate.bio} maxLength={1000} /></label>
-                    <PhotoInput />
+                    <PhotoInput maxMb={process.env.VERCEL === "1" ? 4 : 5} />
                   </BallotForm>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {candidate.photoPath && <BallotForm electionId={election.id} action="candidate-photo-remove"
@@ -90,7 +90,7 @@ export default async function Admin() {
           {!locked && <BallotForm electionId={election.id} action="candidate-add" target={{ name: "positionId", id: position.id }} label="Tambah calon">
             <label>Nama calon<input name="name" placeholder="Nama calon" maxLength={120} required /></label>
             <label>Bio ringkas<textarea name="bio" placeholder="Bio ringkas" maxLength={1000} /></label>
-            <PhotoInput />
+            <PhotoInput maxMb={process.env.VERCEL === "1" ? 4 : 5} />
           </BallotForm>}
         </section>
       ))}

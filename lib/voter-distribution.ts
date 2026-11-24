@@ -7,6 +7,7 @@ import { voterSlips } from "./documents";
 import { effectiveStatus } from "./election";
 import { createElectionMailer } from "./mail";
 import { formatMalaysiaTime } from "./malaysia-time";
+import { appOrigin } from "./request-security";
 import { issueVoterKey } from "./voter-keys";
 
 export const distributionCommand = z.discriminatedUnion("action", [
@@ -16,7 +17,7 @@ export const distributionCommand = z.discriminatedUnion("action", [
 ]);
 
 export function voterUrl() {
-  const url = new URL(z.url().parse(process.env.APP_ORIGIN));
+  const url = appOrigin();
   if (url.protocol !== "https:") throw new Error("APP_ORIGIN must use HTTPS");
   return new URL("/vote", url).href;
 }
