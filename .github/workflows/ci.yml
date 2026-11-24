@@ -1,0 +1,46 @@
+name: M1 checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'kopetro/m1']
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ADMIN_EMAIL: admin@example.com
+      SEED_DEMO: 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Generate ephemeral test credentials
+        run: |
+          for name in POSTGRES_PASSWORD SESSION_SECRET ADMIN_PASSWORD; do
+            value=$(openssl rand -hex 32)
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done
+      - run: docker compose up --build --wait
+      - name: Verify HTTPS, authentication and session revocation
+        run: bash scripts/smoke-m1.sh
+      - if: failure()
+        run: docker compose logs
+      - if: always()
+        run: docker compose down -v

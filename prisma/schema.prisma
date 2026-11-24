@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ElectionStatus {
+  DRAFT
+  SCHEDULED
+  OPEN
+  CLOSED
+}
+
+model Election {
+  id               String         @id @default(uuid()) @db.Uuid
+  name             String
+  orgName          String
+  status           ElectionStatus @default(DRAFT)
+  startsAt         DateTime?      @db.Timestamptz(3)
+  endsAt           DateTime?      @db.Timestamptz(3)
+  resultsPublished Boolean        @default(false)
+  hideLiveResults  Boolean        @default(true)
+  logoPath         String?
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  positions        Position[]
+  voters           Voter[]
+  ballots          Ballot[]
+  auditLogs        AuditLog[]
+}
+
+model Position {
+  id          String         @id @default(uuid()) @db.Uuid
+  electionId  String         @db.Uuid
+  title       String
+  maxChoices  Int
+  sortOrder   Int
+  election    Election       @relation(fields: [electionId], references: [id], onDelete: Restrict)
+  candidates  Candidate[]
+  choices     BallotChoice[]
+
+  @@index([electionId, sortOrder])
+}
+
+model Candidate {
+  id         String         @id @default(uuid()) @db.Uuid
+  positionId String         @db.Uuid
+  name       String
+  bio        String
+  photoPath  String?
+  sortOrder  Int
+  position   Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  choices    BallotChoice[]
+
+  @@unique([positionId, id])
+  @@index([positionId, sortOrder])
+}
+
+model Voter {
+  id         String    @id @default(uuid()) @db.Uuid
+  electionId String    @db.Uuid
+  code       String
+  name       String
+  email      String?
+  keyHash    String
+  hasVoted   Boolean   @default(false)
+  votedAt    DateTime? @db.Timestamptz(3)
+  election   Election  @relation(fields: [electionId], references: [id], onDelete: Restrict)
+
+  @@unique([electionId, code])
+}
+
+model Ballot {
+  id         String         @id @default(uuid()) @db.Uuid
+  electionId String         @db.Uuid
+  election   Election       @relation(fields: [electionId], references: [id], onDelete: Restrict)
+  choices    BallotChoice[]
+
+  @@index([electionId])
+}
+
+model BallotChoice {
+  id          String    @id @default(uuid()) @db.Uuid
+  ballotId    String    @db.Uuid
+  positionId  String    @db.Uuid
+  candidateId String    @db.Uuid
+  ballot      Ballot    @relation(fields: [ballotId], references: [id], onDelete: Restrict)
+  position    Position  @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  candidate   Candidate @relation(fields: [positionId, candidateId], references: [positionId, id], onDelete: Restrict)
+
+  @@unique([ballotId, positionId, candidateId])
+  @@index([positionId, candidateId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  electionId String   @db.Uuid
+  at         DateTime @default(now()) @db.Timestamptz(3)
+  actor      String
+  action     String
+  detail     Json
+  election   Election @relation(fields: [electionId], references: [id], onDelete: Restrict)
+
+  @@index([electionId, at])
+}
+
+model Admin {
+  id           String         @id @default(uuid()) @db.Uuid
+  email        String         @unique
+  passwordHash String
+  sessions     AdminSession[]
+}
+
+model AdminSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  adminId   String   @db.Uuid
+  expiresAt DateTime @db.Timestamptz(3)
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model AdminLoginLimit {
+  key       String   @id
+  attempts  Int
+  expiresAt DateTime @db.Timestamptz(3)
+}
