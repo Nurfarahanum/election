@@ -1,7 +1,7 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
-import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { sessionSecret } from "./request-security";
 import { prisma } from "./db";
 import { hashCredential, verifyCredential } from "./credentials";
 import { readSessionId, signSession } from "./session-token";
@@ -12,22 +12,8 @@ const limitWindowSeconds = 900;
 const maxAttempts = 10;
 let dummyHash: Promise<string> | undefined;
 
-function secret() {
-  return z.string().min(32).parse(process.env.SESSION_SECRET);
-}
-
-export function acceptsOrigin(request: Request) {
-  const canonical = new URL(z.url().parse(process.env.APP_ORIGIN));
-  return canonical.protocol === "https:" && request.headers.get("origin") === canonical.origin;
-}
-
-export function adminRedirect(path: string) {
-  const response = new Response(null, { status: 303, headers: { Location: path, "Cache-Control": "no-store" } });
-  return response;
-}
-
 export async function allowLoginAttempt(ip: string) {
-  const key = createHmac("sha256", secret()).update(ip).digest("hex");
+  const key = createHmac("sha256", sessionSecret()).update(ip).digest("hex");
   const [result] = await prisma.$queryRaw<{ attempts: number }[]>`
     INSERT INTO "AdminLoginLimit" ("key", "attempts", "expiresAt")
     VALUES (${key}, 1, NOW() + ${limitWindowSeconds} * INTERVAL '1 second')
@@ -61,14 +47,14 @@ export async function startAdminSession(adminId: string) {
     await record(tx, `ADMIN:${adminId}`, "ADMIN_LOGIN");
     return created;
   });
-  (await cookies()).set(cookieName, signSession(session.id, secret()), {
+  (await cookies()).set(cookieName, signSession(session.id, sessionSecret()), {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", expires: expiresAt,
   });
 }
 
 async function currentSessionId() {
   const token = (await cookies()).get(cookieName)?.value;
-  return token ? readSessionId(token, secret()) : null;
+  return token ? readSessionId(token, sessionSecret()) : null;
 }
 
 export async function currentAdmin() {

@@ -51,3 +51,19 @@ entries without email, by normalized name. An import is applied as one batch.
 Keys appear only in the successful creation or regeneration response. Record
 them before dismissing the list or leaving the page. Regeneration invalidates
 the old key. The voter list and audit records contain no plaintext keys.
+
+## Voter flow
+
+Voters visit `/vote` and use their ID and key. Both are case-insensitive.
+A voter code locks for 15 minutes after five wrong keys. The app uses the client IP from Caddy to apply a database-backed login budget of 300 attempts per IP per
+15-minute window so voters can share an AGM venue network.
+
+The ballot displays a review before final submission. Unselected positions
+count as abstentions. Successful submissions mark the voter and write an
+anonymous ballot in the same PostgreSQL transaction. The confirmation page
+shows that voting is complete. A voter session expires after four hours and
+is invalidated when an administrator regenerates the key.
+
+Opening and scheduling through the admin UI are part of milestone M4. The
+Compose smoke test sets a test election's schedule directly in its disposable
+database to exercise the M3 flow.

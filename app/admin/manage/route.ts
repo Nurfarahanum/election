@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { acceptsOrigin, currentAdmin } from "../../../lib/admin-auth";
+import { currentAdmin } from "../../../lib/admin-auth";
 import { activeElection, AdminInputError, withElectionLock } from "../../../lib/admin-election";
 import { ballotCommand, editBallot } from "../../../lib/ballot-admin";
 import { deletePhoto, preparePhoto, savePhoto } from "../../../lib/candidate-photo";
+import { acceptsOrigin } from "../../../lib/request-security";
 import { prisma } from "../../../lib/db";
 import { addVoters, prepareVoters, registeredVoters, updateVoter, voterCommand } from "../../../lib/voter-admin";
 import { parseImport, validateImport } from "../../../lib/voter-import";

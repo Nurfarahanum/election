@@ -68,6 +68,7 @@ model Voter {
   hasVoted   Boolean   @default(false)
   votedAt    DateTime? @db.Timestamptz(3)
   election   Election  @relation(fields: [electionId], references: [id], onDelete: Restrict)
+  sessions   VoterSession[]
 
   @@unique([electionId, code])
 }
@@ -127,4 +128,23 @@ model AdminLoginLimit {
   key       String   @id
   attempts  Int
   expiresAt DateTime @db.Timestamptz(3)
+}
+
+model VoterSession {
+  id                    String   @id @default(uuid()) @db.Uuid
+  voterId               String   @db.Uuid
+  credentialFingerprint String
+  expiresAt             DateTime @db.Timestamptz(3)
+  voter                 Voter    @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@index([voterId])
+  @@index([expiresAt])
+}
+
+model VoterLoginLimit {
+  key       String   @id
+  attempts  Int
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
 }
