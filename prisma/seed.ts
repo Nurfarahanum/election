@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { issueVoterKey } from "../lib/voter-keys";
 import { prisma } from "../lib/db";
 import { emailSchema, hashCredential, passwordSchema } from "../lib/credentials";
 
@@ -23,7 +23,7 @@ const voters = [
   "Hafiz Rahman", "Aishah Karim", "Mohd Syafiq", "Lina Abdullah", "Kamal Ariffin", "Zarina Osman",
 ];
 const demoId = "feb5c62c-5df0-47a4-94a4-f317744faeab";
-const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
 
 async function seed() {
   const email = emailSchema.parse(process.env.ADMIN_EMAIL);
@@ -41,8 +41,8 @@ async function seed() {
 
   const entries = [];
   for (const [index, name] of (demo ? voters : []).entries()) {
-    const key = Array.from({ length: 8 }, () => alphabet[randomInt(alphabet.length)]).join("");
-    entries.push({ name, code: `KP-${String(index + 1).padStart(3, "0")}`, keyHash: await hashCredential(key) });
+    const { keyHash } = await issueVoterKey();
+    entries.push({ name, code: `KP-${String(index + 1).padStart(3, "0")}`, keyHash });
   }
 
   await prisma.election.create({ data: {

@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
     "default-src 'none'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' ${dev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
-    "font-src 'self'", "img-src 'self'", "connect-src 'self'",
+    "font-src 'self'", "img-src 'self' blob:", "connect-src 'self'",
     "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'",
   ].join("; ");
   const headers = new Headers(request.headers);
@@ -18,4 +18,4 @@ export function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/", "/admin", "/admin/login"] };
+export const config = { matcher: ["/", "/admin", "/admin/login", "/admin/voters"] };

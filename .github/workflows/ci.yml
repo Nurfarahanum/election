@@ -1,9 +1,9 @@
-name: M1 checks
+name: Kopetro checks
 
 on:
   pull_request:
   push:
-    branches: [main, 'kopetro/m1']
+    branches: [main, 'kopetro/m1', 'kopetro/m2']
 
 permissions:
   contents: read
@@ -38,8 +38,11 @@ jobs:
             echo "$name=$value" >> "$GITHUB_ENV"
           done
       - run: docker compose up --build --wait
-      - name: Verify HTTPS, authentication and session revocation
-        run: bash scripts/smoke-m1.sh
+      - name: Verify HTTPS, admin sessions, ballot editing and voter import
+        run: |
+          bash scripts/smoke-m2.sh
+          docker compose exec -T postgres psql -U kopetro -d kopetro -c 'TRUNCATE "AdminLoginLimit";'
+          bash scripts/smoke-m1.sh
       - if: failure()
         run: docker compose logs
       - if: always()

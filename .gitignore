@@ -8,3 +8,5 @@ playwright-report/
 test-results/
 
 kopetro-local-ca.crt
+
+.candidate-photos/
