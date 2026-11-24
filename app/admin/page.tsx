@@ -56,7 +56,7 @@ export default async function Admin() {
             <BallotForm key={JSON.stringify([position.title, position.maxChoices])} electionId={election.id} action="position-update"
               target={{ name: "positionId", id: position.id }} label="Simpan jawatan">
               <label>Nama jawatan<input name="title" defaultValue={position.title} maxLength={120} required /></label>
-              <label>Bilangan dipilih<input name="maxChoices" type="number" min={1} max={200} defaultValue={position.maxChoices} required /></label>
+              <label>Bilangan dipilih<input name="maxChoices" type="number" min={1} max={2147483647} defaultValue={position.maxChoices} required /></label>
             </BallotForm>
           </details>}
           <ul className="mt-2.5">
@@ -100,7 +100,7 @@ export default async function Admin() {
         <h3 className="font-bold">Jawatan baharu</h3>
         <BallotForm electionId={election.id} action="position-add" label="Tambah jawatan">
           <label>Nama jawatan<input name="title" placeholder="Nama jawatan" maxLength={120} required /></label>
-          <label>Bilangan dipilih<input name="maxChoices" type="number" min={1} max={200} defaultValue={1} required /></label>
+          <label>Bilangan dipilih<input name="maxChoices" type="number" min={1} max={2147483647} defaultValue={1} required /></label>
         </BallotForm>
       </section>}
     </>

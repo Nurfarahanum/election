@@ -97,6 +97,8 @@ db "UPDATE \"Election\" SET status='OPEN'; UPDATE \"Voter\" SET \"hasVoted\"=tru
 voted_id=$(db "SELECT id FROM \"Voter\" WHERE code='KP-001';")
 test "$(manage -F action=position-remove -F "positionId=$position_id" -o /dev/null -w '%{http_code}')" = 409
 test "$(manage -F action=voter-remove -F "voterId=$voted_id" -o /dev/null -w '%{http_code}')" = 409
+manage --fail -F action=voter-regenerate -F "voterId=$voted_id" >/dev/null
+test "$(db "SELECT count(*) FROM \"Voter\" WHERE id = '$voted_id' AND \"hasVoted\";")" = 1
 manage --fail -F action=voter-add -F name='Pengundi Semasa Undian' -F email='' >/dev/null
 test "$(db "SELECT count(*) FROM \"AuditLog\" WHERE action='VOTER_ADD';")" = 2
 echo 'Ballot builder, photo processing, 200-row import and voter key checks passed.'

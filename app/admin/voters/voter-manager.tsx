@@ -169,12 +169,12 @@ export function VoterManager({ electionId, voters }: { electionId: string; voter
                 <td><code>{voter.code}</code></td>
                 <td>{voter.name}</td><td>{voter.email || "—"}</td>
                 <td>{voter.hasVoted ? "Sudah mengundi" : "Belum mengundi"}</td>
-                <td>{!voter.hasVoted && <div className="flex flex-wrap gap-1">
+                <td><div className="flex flex-wrap gap-1">
                   <button type="button" className="ghost" disabled={disabled} aria-label={`Jana semula kunci untuk ${voter.name}`}
                     onClick={() => changeVoter(voter, "voter-regenerate")}>Jana semula kunci</button>
-                  <button type="button" className="ghost" disabled={disabled} aria-label={`Buang pengundi ${voter.name}`}
-                    onClick={() => changeVoter(voter, "voter-remove")}>Buang</button>
-                </div>}</td>
+                  {!voter.hasVoted && <button type="button" className="ghost" disabled={disabled} aria-label={`Buang pengundi ${voter.name}`}
+                    onClick={() => changeVoter(voter, "voter-remove")}>Buang</button>}
+                </div></td>
               </tr>
             ))}</tbody>
           </table>

@@ -65,15 +65,16 @@ export async function updateVoter(
     where: { id: voterId, electionId }, select: { id: true, code: true, name: true, keyHash: true, hasVoted: true },
   });
   if (!voter) throw new AdminInputError("Pengundi tidak ditemui.", 404);
-  if (voter.hasVoted) throw new AdminInputError("Pengundi ini sudah mengundi.", 409);
+  if (!regenerated && voter.hasVoted) throw new AdminInputError("Pengundi ini sudah mengundi.", 409);
   while (regenerated && await verifyCredential(voter.keyHash, regenerated.key)) {
     regenerated = await issueVoterKey();
   }
-  const where = { id: voter.id, hasVoted: false };
-  const result = regenerated
-    ? await tx.voter.updateMany({ where, data: { keyHash: regenerated.keyHash } })
-    : await tx.voter.deleteMany({ where });
-  if (!result.count) throw new AdminInputError("Pengundi ini sudah mengundi.", 409);
+  if (regenerated) {
+    await tx.voter.update({ where: { id: voter.id }, data: { keyHash: regenerated.keyHash } });
+  } else {
+    const deleted = await tx.voter.deleteMany({ where: { id: voter.id, hasVoted: false } });
+    if (!deleted.count) throw new AdminInputError("Pengundi ini sudah mengundi.", 409);
+  }
   await auditAdmin(tx, electionId, adminId, regenerated ? "VOTER_REGENERATE" : "VOTER_REMOVE", { code: voter.code });
   return regenerated ? [{ code: voter.code, name: voter.name, key: regenerated.key }] : [];
 }

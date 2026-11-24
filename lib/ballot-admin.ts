@@ -5,7 +5,7 @@ import { ballotLocked } from "./election";
 
 const id = z.uuid();
 const title = z.string().trim().min(1).max(120);
-const maxChoices = z.coerce.number().int().min(1).max(200);
+const maxChoices = z.coerce.number().int().min(1).max(2147483647);
 const name = z.string().trim().min(1).max(120);
 const bio = z.string().trim().max(1000);
 
