@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<title>Undi AGM Kopetro – Prototaip</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#F4F7F8;--card:#fff;--ink:#12303B;--mut:#5B6B73;--line:#D3DEE2;--acc:#12303B;--on:#fff;--hi:#E0A526;--ok:#1F7A5A;--bad:#B3392F;--soft:#E7EFF1;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1D23;--card:#15282E;--ink:#E6EEF0;--mut:#9DB0B7;--line:#2A4048;--acc:#E0A526;--on:#12303B;--ok:#4FC39A;--bad:#F08A80;--soft:#1D343B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1D23;--card:#15282E;--ink:#E6EEF0;--mut:#9DB0B7;--line:#2A4048;--acc:#E0A526;--on:#12303B;--ok:#4FC39A;--bad:#F08A80;--soft:#1D343B;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{max-width:920px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:8px 0 16px;border-bottom:3px solid var(--hi);margin-bottom:16px}
+h1{font-size:1.4rem;margin:0;line-height:1.2}h2{font-size:1.15rem;margin:20px 0 8px}h3{font-size:1.02rem;margin:0}
+.mut{color:var(--mut);font-size:.9rem}
+.demo{background:var(--soft);border-left:4px solid var(--hi);padding:8px 12px;font-size:.88rem;margin-bottom:16px;border-radius:4px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--ink);padding:8px 16px;font:inherit;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--on);font-weight:600}
+nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+nav button{border:0;background:none;color:var(--mut);padding:10px 14px;font:inherit;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+nav button[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.row h3{flex:1}
+.chip{background:var(--soft);border-radius:99px;padding:2px 10px;font-size:.82rem}
+.chip.dibuka{background:var(--ok);color:var(--card)}.chip.ditutup{background:var(--bad);color:var(--card)}
+.list{list-style:none;margin:10px 0;padding:0}
+.list li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.form{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;flex:1;min-width:140px}
+input[type=number]{max-width:90px;flex:none}textarea{width:100%;min-height:90px}
+button{font:inherit}
+.form button,.btn{background:var(--acc);color:var(--on);border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer}
+.ghost{background:none!important;color:var(--mut)!important;border:1px solid var(--line)!important;font-weight:400!important;padding:5px 10px!important;border-radius:6px;cursor:pointer}
+.danger{background:var(--bad)!important;color:var(--card)!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{text-align:left;padding:7px 6px;border-top:1px solid var(--line)}
+.wrap{overflow-x:auto}
+code{background:var(--soft);padding:1px 6px;border-radius:4px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:8px;margin-top:8px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--acc);background:var(--soft)}
+.opt input{flex:none;min-width:0;width:20px;height:20px;margin-top:3px}
+fieldset{border:0;padding:0;margin:0}legend{font-weight:700;font-size:1.1rem;padding:0}
+.av{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;background:var(--soft);display:grid;place-items:center;font-weight:700;color:var(--mut)}.cand{display:flex;gap:12px;align-items:center}.up{position:relative;display:inline-block}.up input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;min-width:0;padding:0}.up:focus-within{outline:3px solid var(--hi);outline-offset:2px}
+.brand{display:flex;gap:14px;align-items:center}.logo{height:48px;width:auto;background:#fff;border-radius:8px;padding:4px 8px;flex:none}
+.bar{height:22px;background:var(--soft);border-radius:4px;overflow:hidden;margin:3px 0 10px}
+.bar i{display:block;height:100%;background:var(--mut)}.bar i.top{background:var(--ok)}
+.err{color:var(--bad);font-weight:600;margin:8px 0}.ok{color:var(--ok);font-weight:600}
+.login{max-width:420px;margin:24px auto}.login .form{flex-direction:column}
+@media(max-width:560px){#app{padding:12px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const KEY='kopetro-vote-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rid=()=>Math.random().toString(36).slice(2,8);
+const rkey=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let k='';for(let i=0;i<6;i++)k+=a[Math.floor(Math.random()*a.length)];return k};
+const vid=n=>'KP-'+String(n).padStart(3,'0');
+const ini=n=>String(n).trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const av=c=>c.photo?`<img class="av" src="${c.photo}" alt="Foto ${esc(c.name)}">`:`<span class="av" aria-hidden="true">${esc(ini(c.name))}</span>`;
+const fmt=t=>new Date(t).toLocaleString('ms-MY',{dateStyle:'short',timeStyle:'short'});
+const LOGO='data:image/png;base64,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';
+const LBL={draf:'Draf',dijadual:'Dijadualkan',dibuka:'Sedang dibuka',ditutup:'Ditutup'};
+function seed(){
+  const N=['Ahmad Faiz','Siti Aminah','Razak Hamid','Nurul Huda','Zulkifli Yusof','Farah Nabila','Hafiz Rahman','Aishah Karim','Mohd Syafiq','Lina Abdullah','Kamal Ariffin','Zarina Osman'];
+  return{org:'Koperasi Kopetro',agm:'Pemilihan AGM 2026',status:'draf',start:'',end:'',published:false,
+  positions:[
+   {id:'p1',title:'Pengerusi',max:1,cands:[{id:'c1',name:'Dato Rahim Salleh',bio:'Penyandang. 12 tahun dalam lembaga.'},{id:'c2',name:'Hajah Salmah Idris',bio:'Bekas bendahari, fokus tadbir urus.'},{id:'c3',name:'Encik Faizal Nor',bio:'Calon baharu, pakar kewangan.'}]},
+   {id:'p2',title:'Setiausaha',max:1,cands:[{id:'c4',name:'Puan Rohana Ali',bio:'Setiausaha penggal lepas.'},{id:'c5',name:'Encik Hisham Daud',bio:'Peguam syariah.'}]},
+   {id:'p3',title:'Ahli Lembaga',max:2,cands:[{id:'c6',name:'Azman Latif',bio:'Operasi dan logistik.'},{id:'c7',name:'Noraini Kassim',bio:'Sumber manusia.'},{id:'c8',name:'Shahrul Nizam',bio:'Teknologi maklumat.'}]}],
+  voters:N.map((n,i)=>({id:vid(i+1),name:n,email:'',key:rkey(),voted:false})),ballots:[],log:[{t:Date.now(),m:'Pilihan raya dicipta (data demo).'}]}
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+let ui={mode:'admin',tab:'ballot',step:'login',voter:null,sel:{},err:'',csv:''};
+const log=m=>S.log.push({t:Date.now(),m});
+function eff(){if(S.status!=='jadual')return S.status;const n=Date.now(),a=Date.parse(S.start),b=Date.parse(S.end);return n<a?'dijadual':n<b?'dibuka':'ditutup'}
+const locked=()=>{const e=eff();return e==='dibuka'||e==='ditutup'||S.ballots.length>0};
+function tally(){return S.positions.map(p=>{
+  const c=p.cands.map(x=>({...x,n:S.ballots.filter(b=>(b.picks[p.id]||[]).includes(x.id)).length}));
+  const used=S.ballots.filter(b=>(b.picks[p.id]||[]).length).length;
+  const top=[...c].sort((a,b)=>b.n-a.n).slice(0,p.max).filter(x=>x.n>0).map(x=>x.id);
+  return{p,c,abs:S.ballots.length-used,top}})}
+function resultsHTML(){
+  const v=S.voters.length,d=S.voters.filter(x=>x.voted).length,pc=v?Math.round(d/v*100):0;
+  let h=`<div class="card"><h3>Kehadiran mengundi</h3><div class="bar"><i class="top" style="width:${pc}%"></i></div><span class="mut">${d} daripada ${v} pengundi (${pc}%)</span></div>`;
+  tally().forEach(t=>{const m=Math.max(1,...t.c.map(x=>x.n),t.abs);
+    h+=`<div class="card"><h3>${esc(t.p.title)} <span class="chip">Pilih ${t.p.max}</span></h3>`+
+    t.c.map(x=>`<div style="margin-top:10px"><div class="row">${av(x)}<b>${esc(x.name)}</b><span style="margin-left:auto">${x.n} undi${t.top.includes(x.id)?' <span class="ok">· mendahului</span>':''}</span></div><div class="bar"><i class="${t.top.includes(x.id)?'top':''}" style="width:${x.n/m*100}%"></i></div></div>`).join('')+
+    `<div class="mut">Tidak mengundi untuk jawatan ini: ${t.abs}</div></div>`});
+  return h}
+function csvOf(type){
+  if(type==='res')return'Jawatan,Calon,Undi\n'+tally().flatMap(t=>t.c.map(x=>`"${t.p.title}","${x.name}",${x.n}`).concat([`"${t.p.title}","(Tidak mengundi)",${t.abs}`])).join('\n');
+  return'ID Pengundi,Nama,Emel,Kunci\n'+S.voters.map(v=>`${v.id},"${v.name}","${v.email}",${v.key}`).join('\n')}
+function head(){const e=eff();return`<header><div class="brand"><img class="logo" src="${LOGO}" alt="Logo Kopetro"><div><h1>${esc(S.org)}</h1><div class="mut">${esc(S.agm)} · <span class="chip ${e}">${LBL[e]}</span></div></div></div>
+<div class="seg" role="group" aria-label="Mod paparan"><button data-act="mode" data-v="admin" aria-pressed="${ui.mode==='admin'}">Admin</button><button data-act="mode" data-v="voter" aria-pressed="${ui.mode==='voter'}">Pengundi</button></div></header>
+<div class="demo">Prototaip demo. Data disimpan dalam pelayar ini sahaja, jadi admin dan pengundi mesti diuji pada peranti yang sama. <button class="ghost" data-act="reset">Set semula demo</button></div>`}
+function admin(){
+  const T=[['ballot','Ballot'],['voters','Pengundi'],['launch','Pelancaran'],['results','Keputusan'],['audit','Log audit']];
+  let h=`<nav role="tablist">${T.map(t=>`<button role="tab" data-act="tab" data-v="${t[0]}" aria-selected="${ui.tab===t[0]}">${t[1]}</button>`).join('')}</nav>`;
+  const lk=locked();
+  if(ui.tab==='ballot'){
+    h+=`<p class="mut">${lk?'Ballot dikunci kerana undian sudah dibuka atau ada undi masuk.':'Tambah jawatan dan calon. Ballot dikunci sebaik undian dibuka.'}</p>`;
+    h+=`<div class="card"><h3>Tetapan pilihan raya</h3><div class="form"><input id="s-org" value="${esc(S.org)}" aria-label="Nama organisasi"><input id="s-agm" value="${esc(S.agm)}" aria-label="Tajuk pilihan raya"><button data-act="saveinfo">Simpan</button></div></div>`;
+    h+=S.positions.map(p=>`<section class="card"><div class="row"><h3>${esc(p.title)}</h3><span class="chip">Pilih ${p.max}</span>${lk?'':`<button class="ghost" data-act="delpos" data-id="${p.id}">Buang jawatan</button>`}</div>
+    <ul class="list">${p.cands.map(c=>`<li><div class="cand">${av(c)}<div><b>${esc(c.name)}</b><div class="mut">${esc(c.bio)}</div></div></div>${lk?'':`<div class="row"><label class="ghost up">${c.photo?'Tukar foto':'Muat naik foto'}<input type="file" accept="image/*" data-photo="${p.id}|${c.id}"></label>${c.photo?`<button class="ghost" data-act="delphoto" data-p="${p.id}" data-id="${c.id}">Buang foto</button>`:''}<button class="ghost" data-act="delc" data-p="${p.id}" data-id="${c.id}">Buang</button></div>`}</li>`).join('')||'<li class="mut">Belum ada calon.</li>'}</ul>
+    ${lk?'':`<div class="form"><input id="cn-${p.id}" placeholder="Nama calon"><input id="cb-${p.id}" placeholder="Bio ringkas"><input type="file" id="cp-${p.id}" accept="image/*" aria-label="Foto calon"><button data-act="addc" data-id="${p.id}">Tambah calon</button></div>`}</section>`).join('');
+    if(!lk)h+=`<section class="card"><h3>Jawatan baharu</h3><div class="form"><input id="np-t" placeholder="Nama jawatan"><input id="np-m" type="number" min="1" value="1" aria-label="Bilangan dipilih"><button data-act="addpos">Tambah jawatan</button></div></section>`}
+  if(ui.tab==='voters'){
+    h+=`<div class="card"><h3>Tambah pengundi</h3><div class="form"><input id="v-n" placeholder="Nama"><input id="v-e" placeholder="Emel (pilihan)"><button data-act="addvoter">Tambah</button></div>
+    <p class="mut" style="margin-bottom:4px">Atau tampal senarai, satu baris seorang: <code>nama,emel</code></p><textarea id="v-bulk" placeholder="Siti Aminah,siti@contoh.com"></textarea><div class="form"><button data-act="importv">Import senarai</button><button class="ghost" data-act="csv" data-v="vot">Papar CSV kelayakan</button><button class="ghost" data-act="invite">Hantar emel jemputan (simulasi)</button></div></div>`;
+    h+=`<div class="card wrap"><table><thead><tr><th>ID</th><th>Nama</th><th>Kunci</th><th>Status</th><th></th></tr></thead><tbody>${S.voters.map(v=>`<tr><td><code>${v.id}</code></td><td>${esc(v.name)}</td><td><code>${v.key}</code></td><td>${v.voted?'<span class="ok">Sudah mengundi</span>':'Belum'}</td><td>${v.voted?'':`<button class="ghost" data-act="tryvote" data-id="${v.id}">Cuba undi</button> <button class="ghost" data-act="delvoter" data-id="${v.id}">Buang</button>`}</td></tr>`).join('')}</tbody></table></div>`}
+  if(ui.tab==='launch'){const e=eff();
+    h+=`<div class="card"><h3>Status: ${LBL[e]}</h3><p class="mut">Pengundi hanya boleh mengundi ketika status Sedang dibuka.</p>
+    <div class="form"><button data-act="open"${e==='dibuka'?' disabled':''}>Buka undian sekarang</button><button class="ghost danger" data-act="close"${e==='ditutup'?' disabled':''}>Tutup undian</button>${S.ballots.length?'':'<button class="ghost" data-act="draft">Kembali ke draf</button>'}</div></div>
+    <div class="card"><h3>Jadualkan</h3><div class="form"><label class="mut">Mula<br><input type="datetime-local" id="d-s" value="${esc(S.start)}"></label><label class="mut">Tamat<br><input type="datetime-local" id="d-e" value="${esc(S.end)}"></label></div><div class="form"><button data-act="sched">Simpan jadual</button></div>${ui.err?`<div class="err">${esc(ui.err)}</div>`:''}</div>`}
+  if(ui.tab==='results'){
+    h+=resultsHTML()+`<div class="card"><label class="row"><input type="checkbox" style="flex:none;min-width:0;width:20px;height:20px" data-act="pub"${S.published?' checked':''}> Terbitkan keputusan kepada pengundi</label><div class="form"><button class="ghost" data-act="csv" data-v="res">Papar CSV keputusan</button></div></div>`}
+  if(ui.csv)h+=`<div class="card"><h3>CSV</h3><p class="mut">Salin teks ini ke Excel. Versi penuh akan ada butang muat turun.</p><textarea readonly onfocus="this.select()">${esc(ui.csv)}</textarea></div>`;
+  if(ui.tab==='audit')h+=`<div class="card"><h3>Log audit</h3><p class="mut">Mencatat siapa sudah mengundi, tanpa mendedahkan pilihan mereka.</p><ul class="list">${[...S.log].reverse().map(l=>`<li><span>${esc(l.m)}</span><span class="mut">${fmt(l.t)}</span></li>`).join('')}</ul></div>`;
+  return h}
+function voterView(){
+  if(ui.step==='login')return`<div class="card login"><h2 style="margin-top:0">Log masuk untuk mengundi</h2><p class="mut">Masukkan ID Pengundi dan Kunci Pengundi yang anda terima.</p><div class="form"><input id="vid" placeholder="ID Pengundi (cth. KP-001)" autocomplete="off"><input id="vkey" placeholder="Kunci Pengundi" autocomplete="off"><button data-act="login">Log masuk</button></div>${ui.err?`<div class="err">${esc(ui.err)}</div>`:''}</div>`;
+  const me=S.voters.find(v=>v.id===ui.voter);
+  if(ui.step==='ballot')return`<h2 style="margin-top:0">Selamat datang, ${esc(me.name)}</h2><p class="mut">Pilih calon anda. Anda hanya boleh mengundi sekali.</p>`+S.positions.map(p=>{
+    const s=ui.sel[p.id]||[],one=p.max===1;
+    return`<fieldset class="card"><legend>${esc(p.title)}</legend><div class="mut">${one?'Pilih seorang':'Pilih sehingga '+p.max+' orang'}. Biarkan kosong jika tidak mahu mengundi.</div>`+
+    p.cands.map(c=>`<label class="opt"><input type="${one?'radio':'checkbox'}" name="${p.id}" data-pos="${p.id}" data-c="${c.id}"${s.includes(c.id)?' checked':''}>${av(c)}<span><b>${esc(c.name)}</b><br><span class="mut">${esc(c.bio)}</span></span></label>`).join('')+
+    (one?`<label class="opt"><input type="radio" name="${p.id}" data-pos="${p.id}" data-c=""${s.length?'':' checked'}><span class="mut">Tidak mengundi untuk jawatan ini</span></label>`:'')+
+    `<div class="err" id="m-${p.id}"></div></fieldset>`}).join('')+`<button class="btn" data-act="review">Semak undi saya</button>`;
+  if(ui.step==='review')return`<h2 style="margin-top:0">Semak undi anda</h2>`+S.positions.map(p=>{const s=(ui.sel[p.id]||[]).map(id=>p.cands.find(c=>c.id===id).name);
+    return`<div class="card"><b>${esc(p.title)}</b><div>${s.length?esc(s.join(', ')):'<span class="mut">Tidak mengundi</span>'}</div></div>`}).join('')+`<p class="mut">Selepas dihantar, undi tidak boleh diubah.</p><div class="form"><button class="ghost" data-act="back">Kembali ubah</button><button class="btn" data-act="submit">Hantar undi</button></div>${ui.err?`<div class="err">${esc(ui.err)}</div>`:''}`;
+  return`<div class="card login"><h2 style="margin-top:0" class="ok">Undi anda telah direkodkan</h2><p>Terima kasih, ${esc(me.name)}. Anda tidak boleh mengundi lagi.</p><div class="form"><button class="btn" data-act="logout">Keluar</button></div></div>${S.published?'<h2>Keputusan</h2>'+resultsHTML():''}`}
+function render(){$('#app').innerHTML=head()+(ui.mode==='admin'?admin():voterView())}
+function canVote(v){const e=eff();if(e!=='dibuka')return e==='ditutup'?'Undian sudah ditutup.':'Undian belum dibuka.';if(v.voted)return'Anda sudah mengundi.';return''}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-act]');if(!b||b.type==='checkbox')return;const d=b.dataset,v=id=>($('#'+id)||{value:''}).value.trim();
+  ui.err='';
+  const A={
+    mode(){ui.mode=d.v;ui.step='login';ui.voter=null;ui.sel={}},
+    tab(){ui.tab=d.v;ui.csv=''},
+    reset(){if(confirm('Padam semua data demo dan mulakan semula?')){S=seed();ui={mode:'admin',tab:'ballot',step:'login',voter:null,sel:{},err:'',csv:''}}},
+    saveinfo(){S.org=v('s-org')||S.org;S.agm=v('s-agm')||S.agm},
+    delpos(){S.positions=S.positions.filter(p=>p.id!==d.id)},
+    delc(){const p=S.positions.find(p=>p.id===d.p);p.cands=p.cands.filter(c=>c.id!==d.id)},
+    addc(){const n=v('cn-'+d.id);if(!n)return;const f=($('#cp-'+d.id)||{}).files?.[0],c={id:'c'+rid(),name:n,bio:v('cb-'+d.id)};S.positions.find(p=>p.id===d.id).cands.push(c);if(f)shrink(f).then(u=>{c.photo=u;save();render()})},
+    delphoto(){delete S.positions.find(p=>p.id===d.p).cands.find(c=>c.id===d.id).photo},
+    addpos(){const t=v('np-t');if(!t)return;S.positions.push({id:'p'+rid(),title:t,max:Math.max(1,parseInt(v('np-m'))||1),cands:[]})},
+    addvoter(){const n=v('v-n');if(!n)return;addV(n,v('v-e'));log('Pengundi ditambah: '+n)},
+    importv(){const L=v('v-bulk').split('\n').map(x=>x.trim()).filter(Boolean);L.forEach(l=>{const p=l.split(',');addV(p[0].trim(),(p[1]||'').trim())});if(L.length)log(L.length+' pengundi diimport.')},
+    delvoter(){S.voters=S.voters.filter(x=>x.id!==d.id)},
+    invite(){log('Emel jemputan dihantar kepada '+S.voters.filter(x=>x.email).length+' pengundi (simulasi).')},
+    csv(){ui.csv=csvOf(d.v)},
+    open(){S.status='dibuka';log('Undian dibuka.')},
+    close(){S.status='ditutup';log('Undian ditutup.')},
+    draft(){S.status='draf';log('Kembali ke draf.')},
+    sched(){const s=v('d-s'),e=v('d-e');if(!s||!e||Date.parse(e)<=Date.parse(s)){ui.err='Isi tarikh mula dan tamat. Tamat mesti selepas mula.';return}S.start=s;S.end=e;S.status='jadual';log('Jadual disimpan: '+fmt(s)+' hingga '+fmt(e)+'.')},
+    tryvote(){const x=S.voters.find(x=>x.id===d.id);ui.mode='voter';ui.voter=null;ui.step='login';const m=canVote(x);if(m)ui.err=m;else{ui.voter=x.id;ui.step='ballot';ui.sel={}}},
+    login(){const id=v('vid').toUpperCase(),k=v('vkey').toUpperCase(),x=S.voters.find(x=>x.id===id&&x.key===k);if(!x){ui.err='ID atau Kunci tidak sepadan.';return}const m=canVote(x);if(m){ui.err=m;return}ui.voter=x.id;ui.step='ballot';ui.sel={}},
+    review(){ui.step='review'},back(){ui.step='ballot'},
+    submit(){const x=S.voters.find(x=>x.id===ui.voter),m=canVote(x);if(m){ui.err=m;return}
+      S.ballots.push({id:rid(),picks:{...ui.sel}});x.voted=true;log(x.id+' telah mengundi.');ui.step='done'},
+    logout(){ui.step='login';ui.voter=null;ui.sel={}}
+  };
+  if(A[d.act]){A[d.act]();save();render()}
+});
+document.addEventListener('change',ev=>{const t=ev.target;
+  if(t.dataset.photo){const k=t.dataset.photo.split('|'),f=t.files[0];if(!f)return;shrink(f).then(u=>{if(!u)return;S.positions.find(p=>p.id===k[0]).cands.find(c=>c.id===k[1]).photo=u;save();render()});return}
+  if(t.dataset.act==='pub'){S.published=t.checked;log(t.checked?'Keputusan diterbitkan.':'Keputusan disembunyikan.');save();return}
+  if(!t.dataset.pos)return;const p=S.positions.find(x=>x.id===t.dataset.pos);let c=ui.sel[p.id]||[];
+  if(t.type==='radio'){ui.sel[p.id]=t.dataset.c?[t.dataset.c]:[];return}
+  if(t.checked){if(c.length>=p.max){t.checked=false;$('#m-'+p.id).textContent='Anda hanya boleh pilih '+p.max+' orang untuk jawatan ini.';return}c=[...c,t.dataset.c]}else c=c.filter(x=>x!==t.dataset.c);
+  $('#m-'+p.id).textContent='';ui.sel[p.id]=c});
+function shrink(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const s=240,k=Math.min(i.width,i.height),cv=document.createElement('canvas');cv.width=cv.height=s;cv.getContext('2d').drawImage(i,(i.width-k)/2,(i.height-k)/2,k,k,0,0,s,s);res(cv.toDataURL('image/jpeg',.82))};i.onerror=()=>res('');i.src=r.result};r.onerror=()=>res('');r.readAsDataURL(f)})}
+function addV(n,e){const m=Math.max(0,...S.voters.map(v=>parseInt(v.id.slice(3))||0));S.voters.push({id:vid(m+1),name:n,email:e,key:rkey(),voted:false})}
+render();
+</script>
+</body>
+</html>
