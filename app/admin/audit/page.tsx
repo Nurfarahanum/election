@@ -18,6 +18,12 @@ const actions: Record<string, string> = {
   RESULTS_VISIBILITY: "Tetapan paparan keputusan disimpan.",
   RESULTS_PUBLISH: "Penerbitan keputusan diubah.",
   VOTE_SUBMITTED: "Undi direkodkan.",
+  VOTER_SLIPS: "Slip pengundi dijana.",
+  VOTER_INVITATION: "Emel jemputan dihantar.",
+  VOTER_REMINDER: "Peringatan dihantar.",
+  INVITATIONS_BATCH: "Edaran jemputan selesai.",
+  REMINDERS_BATCH: "Edaran peringatan selesai.",
+  FILE_EXPORT: "Fail dieksport.",
   VOTER_ADD: "Pengundi ditambah.",
   VOTER_REMOVE: "Pengundi dibuang.",
   VOTER_REGENERATE: "Kunci pengundi dijana semula.",
@@ -53,6 +59,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       <section className="card">
         <h2 className="font-bold">Log audit</h2>
         <p className="mut my-2">Mencatat siapa sudah mengundi, tanpa mendedahkan pilihan mereka.</p>
+        <a className="ghost mb-3 inline-flex items-center" href="/admin/export/log-audit.csv" download>Muat turun log audit (CSV)</a>
         {logs.length === 0 && <p className="mut">Tiada rekod pada halaman ini.</p>}
         <ul>
           {logs.slice(0, pageSize).map(log => (

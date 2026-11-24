@@ -22,7 +22,13 @@ export default async function ResultsPage() {
       <p className="mut mb-3">Status: {electionLabels[view.status]}</p>
       <Turnout turnout={view.turnout} />
       {view.results
-        ? <ResultCounts results={view.results} admin />
+        ? <>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <a className="ghost inline-flex items-center" href="/admin/export/keputusan.csv" download>Muat turun keputusan (CSV)</a>
+            <a className="ghost inline-flex items-center" href="/admin/export/keputusan.pdf" download>Muat turun keputusan (PDF)</a>
+          </div>
+          <ResultCounts results={view.results} admin />
+        </>
         : <p className="card mut">Keputusan calon disembunyikan sehingga undian ditutup.</p>}
       <section className="card">
         <h2 className="font-bold">Paparan keputusan</h2>

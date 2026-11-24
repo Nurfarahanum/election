@@ -12,6 +12,9 @@
   request_body /vote/submit {
     max_size 128KB
   }
+  request_body /admin/distribute {
+    max_size 16KB
+  }
   reverse_proxy app:3000 {
     header_up X-Kopetro-Client-IP {remote_host}
   }
