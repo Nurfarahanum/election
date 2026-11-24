@@ -38,18 +38,24 @@ async function record(tx: Prisma.TransactionClient, actor: string, action: strin
   await tx.auditLog.create({ data: { electionId: election.id, actor, action, detail: {} } });
 }
 
-export async function startAdminSession(adminId: string) {
+export async function startAdminSession(adminId: string, verifiedHash: string) {
   const previous = await currentSessionId();
   const expiresAt = new Date(Date.now() + sessionLifetime);
   const session = await prisma.$transaction(async (tx) => {
+    const [admin] = await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Admin" WHERE id = ${adminId}::uuid AND "passwordHash" = ${verifiedHash} FOR SHARE
+    `;
+    if (!admin) return null;
     if (previous) await tx.adminSession.deleteMany({ where: { id: previous } });
     const created = await tx.adminSession.create({ data: { adminId, expiresAt } });
     await record(tx, `ADMIN:${adminId}`, "ADMIN_LOGIN");
     return created;
   });
+  if (!session) return false;
   (await cookies()).set(cookieName, signSession(session.id, sessionSecret()), {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", expires: expiresAt,
   });
+  return true;
 }
 
 async function currentSessionId() {
@@ -77,4 +83,19 @@ export async function endAdminSession() {
     });
   }
   (await cookies()).set(cookieName, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+}
+
+export async function changeAdminPassword(adminId: string, currentPassword: string, newPassword: string) {
+  const admin = await prisma.admin.findUnique({ where: { id: adminId }, select: { passwordHash: true } });
+  if (!admin || !await verifyCredential(admin.passwordHash, currentPassword)) return false;
+  const passwordHash = await hashCredential(newPassword);
+  return prisma.$transaction(async tx => {
+    const update = await tx.admin.updateMany({
+      where: { id: adminId, passwordHash: admin.passwordHash }, data: { passwordHash },
+    });
+    if (!update.count) return false;
+    await tx.adminSession.deleteMany({ where: { adminId } });
+    await record(tx, `ADMIN:${adminId}`, "ADMIN_PASSWORD_CHANGED");
+    return true;
+  });
 }

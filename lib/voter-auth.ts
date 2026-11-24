@@ -72,39 +72,51 @@ export async function startVoterSession(code: string, key: string) {
   const election = await activeElection();
   if (!election) return "invalid";
   const bucket = rateKey("code", `${election.id}:${code}`);
-  const fallback = await (dummyHash ??= hashCredential(randomUUID()));
+  const [limit, voter] = await Promise.all([
+    prisma.voterLoginLimit.findUnique({ where: { key: bucket } }),
+    prisma.voter.findUnique({
+      where: { electionId_code: { electionId: election.id, code } },
+      select: { id: true, keyHash: true },
+    }),
+  ]);
+  if (limit && limit.attempts >= maxCodeFailures && limit.expiresAt > new Date()) return "invalid";
+
+  // Keep Argon2 outside the database transaction so bursts do not occupy the connection pool.
+  const verifier = voter?.keyHash ?? await (dummyHash ??= hashCredential(randomUUID()));
+  const matched = await verifyCredential(verifier, key);
+  if (!voter || !matched) {
+    await prisma.$executeRaw`
+      INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
+      VALUES (${bucket}, 1, NOW() + ${limitMilliseconds} * INTERVAL '1 millisecond')
+      ON CONFLICT ("key") DO UPDATE SET
+        "attempts" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
+          THEN 1 ELSE "VoterLoginLimit"."attempts" + 1 END,
+        "expiresAt" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
+            OR "VoterLoginLimit"."attempts" = ${maxCodeFailures - 1}
+          THEN EXCLUDED."expiresAt" ELSE "VoterLoginLimit"."expiresAt" END
+      WHERE "VoterLoginLimit"."expiresAt" <= NOW() OR "VoterLoginLimit"."attempts" < ${maxCodeFailures}
+    `;
+    return "invalid";
+  }
 
   const result = await prisma.$transaction(async (tx) => {
-    // Serialize attempts against one code, including unregistered codes.
-    await tx.$executeRaw`
+    // A successful verification still loses to any lockout committed while Argon2 was running.
+    const reset = await tx.$executeRaw`
       INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
-      VALUES (${bucket}, 0, NOW()) ON CONFLICT ("key") DO NOTHING
+      VALUES (${bucket}, 0, NOW())
+      ON CONFLICT ("key") DO UPDATE SET "attempts" = 0, "expiresAt" = EXCLUDED."expiresAt"
+      WHERE "VoterLoginLimit"."expiresAt" <= NOW() OR "VoterLoginLimit"."attempts" < ${maxCodeFailures}
     `;
-    const [limit] = await tx.$queryRaw<{ attempts: number; expiresAt: Date }[]>`
-      SELECT "attempts", "expiresAt" FROM "VoterLoginLimit" WHERE "key" = ${bucket} FOR UPDATE
-    `;
-    const expired = limit.expiresAt <= new Date();
-    if (!expired && limit.attempts >= maxCodeFailures) return { status: "invalid" } as const;
-
-    const voter = await tx.voter.findUnique({
-      where: { electionId_code: { electionId: election.id, code } },
-      select: { id: true, keyHash: true, hasVoted: true },
-    });
-    const matched = await verifyCredential(voter?.keyHash ?? fallback, key);
-    if (!voter || !matched) {
-      const attempts = expired ? 1 : limit.attempts + 1;
-      const expiresAt = expired || attempts === maxCodeFailures
-        ? new Date(Date.now() + limitMilliseconds) : limit.expiresAt;
-      await tx.voterLoginLimit.update({ where: { key: bucket }, data: { attempts, expiresAt } });
-      return { status: "invalid" } as const;
-    }
-
-    await tx.voterLoginLimit.delete({ where: { key: bucket } });
+    if (!reset) return { status: "invalid" } as const;
     const current = await tx.election.findUniqueOrThrow({ where: { id: election.id } });
     const status = effectiveStatus(current);
     const publishedResults = status === "CLOSED" && current.resultsPublished;
     if (status !== "OPEN" && !publishedResults) return { status: status === "CLOSED" ? "closed" : "not-open" } as const;
-    if (status === "OPEN" && voter.hasVoted) return { status: "voted" } as const;
+    const [eligible] = await tx.$queryRaw<{ hasVoted: boolean }[]>`
+      SELECT "hasVoted" FROM "Voter" WHERE id = ${voter.id}::uuid AND "keyHash" = ${voter.keyHash} FOR SHARE
+    `;
+    if (!eligible) return { status: "invalid" } as const;
+    if (status === "OPEN" && eligible.hasVoted) return { status: "voted" } as const;
 
     const expiresAt = new Date(Date.now() + sessionLifetime);
     if (previous) await tx.voterSession.deleteMany({ where: { id: previous } });

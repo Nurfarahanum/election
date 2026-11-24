@@ -24,6 +24,7 @@ model Election {
   resultsPublished Boolean        @default(false)
   hideLiveResults  Boolean        @default(true)
   logoPath         String?
+  primaryColor      String?
   createdAt        DateTime       @default(now()) @db.Timestamptz(3)
   positions        Position[]
   voters           Voter[]

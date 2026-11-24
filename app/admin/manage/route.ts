@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { currentAdmin } from "../../../lib/admin-auth";
 import { activeElection, AdminInputError, withElectionLock } from "../../../lib/admin-election";
+import { brandingCommand, changeBranding } from "../../../lib/branding";
 import { ballotCommand, editBallot } from "../../../lib/ballot-admin";
 import { deletePhoto, preparePhoto, savePhoto } from "../../../lib/candidate-photo";
 import { acceptsOrigin } from "../../../lib/request-security";
@@ -40,6 +41,11 @@ export async function POST(request: Request) {
     }
 
     const { action } = input.data;
+    const branding = brandingCommand.safeParse(fields);
+    if (branding.success) {
+      await changeBranding(election.id, admin.id, branding.data);
+      return json({ message: "Penjenamaan disimpan." });
+    }
     const launch = launchCommand.safeParse(fields);
     if (launch.success) {
       const message = await withElectionLock(election.id, (tx, lockedElection) =>

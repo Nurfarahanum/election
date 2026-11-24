@@ -15,6 +15,9 @@
   request_body /admin/distribute {
     max_size 16KB
   }
+  request_body /admin/account/password {
+    max_size 16KB
+  }
   reverse_proxy app:3000 {
     header_up X-Kopetro-Client-IP {remote_host}
   }

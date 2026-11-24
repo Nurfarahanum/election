@@ -20,7 +20,6 @@ export async function POST(request: Request) {
   if (!input.success) return redirectAfterPost(loginFailed);
 
   const admin = await verifyAdmin(input.data.email, input.data.password);
-  if (!admin) return redirectAfterPost(loginFailed);
-  await startAdminSession(admin.id);
+  if (!admin || !await startAdminSession(admin.id, admin.passwordHash)) return redirectAfterPost(loginFailed);
   return redirectAfterPost("/admin");
 }
