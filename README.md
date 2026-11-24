@@ -152,5 +152,7 @@ KOPETRO_DISPOSABLE_TEST_DB=1 bash scripts/smoke-backup.sh
 
 The test runner changes election state and creates synthetic voter records.
 Use a fresh disposable database. The load benchmark starts 200 simultaneous
-voters and measures HTTPS login, ballot load, submission and confirmation
-as one journey. Each phase and the full journey report p95 in milliseconds.
+voters and measures the HTTPS journey from submitted credentials to the
+successful vote response that displays confirmation. The browser receives
+the ballot in the sign-in response. The benchmark verifies every durable
+receipt by reopening the page and reports p95 in milliseconds.

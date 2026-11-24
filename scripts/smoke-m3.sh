@@ -90,7 +90,13 @@ test "$(login "$schedule_code" "$schedule_key" "$test_dir/cannot-login")" = "$or
 
 # Exhaust the client-IP bucket and verify that a correct, otherwise eligible login fails.
 db "UPDATE \"Election\" SET \"endsAt\"=now() + interval '1 hour';
-  UPDATE \"VoterLoginLimit\" SET attempts=300 WHERE attempts > 5;" >/dev/null
+  UPDATE \"VoterLoginLimit\" SET attempts=298 WHERE attempts > 5;" >/dev/null
+for i in {1..5}; do
+  (login "$schedule_code" "$schedule_key" "$test_dir/ip-cookie-$i"; echo) > "$test_dir/ip-status-$i" &
+done
+wait
+test "$(cat "$test_dir"/ip-status-* | grep -cFx "$origin/vote")" = 2
+test "$(cat "$test_dir"/ip-status-* | grep -cFx "$origin/vote?ralat=invalid")" = 3
 test "$(login "$schedule_code" "$schedule_key" "$test_dir/ip-locked")" = "$origin/vote?ralat=invalid"
 
 echo 'Voter login, lockout, scheduled close and exactly one ballot from 20 parallel submissions passed.'

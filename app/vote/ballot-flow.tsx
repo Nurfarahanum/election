@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { RefreshData } from "../refresh-data";
 import type { BallotPosition, Selection } from "../../lib/ballot-selection";
 
 export function VoterLogout() {
@@ -25,7 +25,6 @@ export function VoteConfirmation({ name }: { name: string }) {
 }
 
 export function BallotFlow({ name, positions }: { name: string; positions: BallotPosition[] }) {
-  const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
   const errorNotice = useRef<HTMLParagraphElement>(null);
   const [picks, setPicks] = useState<Record<string, string[]>>({});
@@ -77,7 +76,6 @@ export function BallotFlow({ name, positions }: { name: string; positions: Ballo
       if (response.ok && result.ok) {
         setPicks({});
         setStep("done");
-        router.refresh();
       } else {
         setError(result.error ?? "Undi tidak dapat dihantar.");
       }
@@ -89,7 +87,7 @@ export function BallotFlow({ name, positions }: { name: string; positions: Ballo
     }
   }
 
-  if (step === "done") return <VoteConfirmation name={name} />;
+  if (step === "done") return <><RefreshData /><VoteConfirmation name={name} /></>;
 
   return (
     <>

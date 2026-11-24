@@ -31,29 +31,62 @@ export function credentialFingerprint(hash: string) {
   return createHash("sha256").update(hash).digest("hex");
 }
 
-async function loadLogin(code: string, ip: string) {
+type LoginEntry = { electionId: string | null; voterId: string | null; keyHash: string | null };
+type LoginWaiter = {
+  code: string;
+  resolve: (entry: LoginEntry) => void;
+  reject: (error: unknown) => void;
+};
+const loginBatches = new Map<string, LoginWaiter[]>();
+
+// Coalesce a brief burst from a shared network into one atomic IP counter update.
+function loadLogin(code: string, ip: string) {
   const ipKey = rateKey("ip", ip);
-  const [entry] = await prisma.$queryRaw<{
-    attempts: number; electionId: string | null; voterId: string | null; keyHash: string | null;
-  }[]>`
-    WITH ip_attempt AS (
-      INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
-      VALUES (${ipKey}, 1, NOW() + ${limitMilliseconds} * INTERVAL '1 millisecond')
-      ON CONFLICT ("key") DO UPDATE SET
-        "attempts" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
-          THEN 1 ELSE LEAST("VoterLoginLimit"."attempts" + 1, ${maxIpAttempts + 1}) END,
-        "expiresAt" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
-          THEN EXCLUDED."expiresAt" ELSE "VoterLoginLimit"."expiresAt" END
-      RETURNING "attempts"
-    )
-    SELECT ip_attempt.attempts, election.id AS "electionId", v.id AS "voterId", v."keyHash"
-    FROM ip_attempt
-    LEFT JOIN LATERAL (
-      SELECT id FROM "Election" ORDER BY "createdAt" DESC, id DESC LIMIT 1
-    ) election ON ip_attempt.attempts <= ${maxIpAttempts}
-    LEFT JOIN "Voter" v ON v."electionId" = election.id AND v.code = ${code}
-  `;
-  return entry;
+  return new Promise<LoginEntry>((resolve, reject) => {
+    const batch = loginBatches.get(ipKey);
+    if (batch) {
+      batch.push({ code, resolve, reject });
+      if (batch.length === 100) void flushLoginBatch(ipKey, batch);
+      return;
+    }
+
+    const first = [{ code, resolve, reject }];
+    loginBatches.set(ipKey, first);
+    setTimeout(() => void flushLoginBatch(ipKey, first), 5);
+  });
+}
+
+async function flushLoginBatch(ipKey: string, batch: LoginWaiter[]) {
+  if (loginBatches.get(ipKey) !== batch) return;
+  loginBatches.delete(ipKey);
+  const size = batch.length;
+  try {
+    const entries = await prisma.$queryRaw<LoginEntry[]>`
+      WITH ip_attempt AS (
+        INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
+        VALUES (${ipKey}, ${size}::int, NOW() + ${limitMilliseconds} * INTERVAL '1 millisecond')
+        ON CONFLICT ("key") DO UPDATE SET
+          "attempts" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
+            THEN EXCLUDED."attempts"
+            ELSE LEAST("VoterLoginLimit"."attempts" + EXCLUDED."attempts", ${maxIpAttempts + size}) END,
+          "expiresAt" = CASE WHEN "VoterLoginLimit"."expiresAt" <= NOW()
+            THEN EXCLUDED."expiresAt" ELSE "VoterLoginLimit"."expiresAt" END
+        RETURNING "attempts"
+      )
+      SELECT election.id AS "electionId", v.id AS "voterId", v."keyHash"
+      FROM ip_attempt
+      CROSS JOIN jsonb_array_elements_text(${JSON.stringify(batch.map(waiter => waiter.code))}::jsonb)
+        WITH ORDINALITY AS input(code, arrival)
+      LEFT JOIN LATERAL (
+        SELECT id FROM "Election" ORDER BY "createdAt" DESC, id DESC LIMIT 1
+      ) election ON ip_attempt.attempts - ${size} + input.arrival <= ${maxIpAttempts}
+      LEFT JOIN "Voter" v ON v."electionId" = election.id AND v.code = input.code
+      ORDER BY input.arrival
+    `;
+    for (const [index, waiter] of batch.entries()) waiter.resolve(entries[index]);
+  } catch (error) {
+    for (const waiter of batch) waiter.reject(error);
+  }
 }
 
 export async function voterSessionId() {
@@ -79,10 +112,10 @@ export async function findVoterSession(id: string) {
 
 export async function startVoterSession(code: string, key: string, ip: string) {
   const entry = await loadLogin(code, ip);
-  if (!entry?.electionId || !code) return "invalid";
+  if (!entry?.electionId || !code) return { status: "invalid" } as const;
   const bucket = rateKey("code", `${entry.electionId}:${code}`);
   const limit = await prisma.voterLoginLimit.findUnique({ where: { key: bucket } });
-  if (limit && limit.attempts >= maxCodeFailures && limit.expiresAt > new Date()) return "invalid";
+  if (limit && limit.attempts >= maxCodeFailures && limit.expiresAt > new Date()) return { status: "invalid" } as const;
 
   // Keep Argon2 outside the database transaction so bursts do not occupy the connection pool.
   const verifier = entry.keyHash ?? await (dummyHash ??= hashCredential(randomUUID()));
@@ -99,7 +132,7 @@ export async function startVoterSession(code: string, key: string, ip: string) {
           THEN EXCLUDED."expiresAt" ELSE "VoterLoginLimit"."expiresAt" END
       WHERE "VoterLoginLimit"."expiresAt" <= NOW() OR "VoterLoginLimit"."attempts" < ${maxCodeFailures}
     `;
-    return "invalid";
+    return { status: "invalid" } as const;
   }
 
   const previous = await voterSessionId();
@@ -108,7 +141,7 @@ export async function startVoterSession(code: string, key: string, ip: string) {
   // The rate check and session insert are atomic. A concurrent lockout or key rotation wins.
   const [result] = await prisma.$queryRaw<{
     status: ElectionStatus; startsAt: Date | null; endsAt: Date | null; hasVoted: boolean;
-    sessionId: string | null;
+    sessionId: string | null; name: string; electionId: string;
   }[]>`
     WITH allowed AS (
       INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
@@ -117,7 +150,7 @@ export async function startVoterSession(code: string, key: string, ip: string) {
       WHERE "VoterLoginLimit"."expiresAt" <= NOW() OR "VoterLoginLimit"."attempts" < ${maxCodeFailures}
       RETURNING "key"
     ), verified AS MATERIALIZED (
-      SELECT v.id, v."hasVoted", e.status, e."startsAt", e."endsAt", e."resultsPublished"
+      SELECT v.id, v.name, v."electionId", v."hasVoted", e.status, e."startsAt", e."endsAt", e."resultsPublished"
       FROM allowed CROSS JOIN "Voter" v JOIN "Election" e ON e.id = v."electionId"
       WHERE v.id = ${entry.voterId}::uuid AND v."keyHash" = ${entry.keyHash}
       FOR SHARE OF v
@@ -132,19 +165,18 @@ export async function startVoterSession(code: string, key: string, ip: string) {
       INSERT INTO "VoterSession" (id, "voterId", "credentialFingerprint", "expiresAt")
       SELECT ${sessionId}::uuid, id, ${credentialFingerprint(entry.keyHash)}, ${expiresAt} FROM eligible RETURNING id
     )
-    SELECT verified.status, verified."startsAt", verified."endsAt", verified."hasVoted", issued.id AS "sessionId"
+    SELECT verified.name, verified."electionId", verified.status, verified."startsAt", verified."endsAt", verified."hasVoted", issued.id AS "sessionId"
     FROM verified LEFT JOIN issued ON true
   `;
 
-  if (!result) return "invalid";
+  if (!result) return { status: "invalid" } as const;
   if (!result.sessionId) {
     const status = effectiveStatus(result);
-    if (status === "CLOSED") return "closed";
-    return status === "OPEN" && result.hasVoted ? "voted" : "not-open";
+    if (status === "CLOSED") return { status: "closed" } as const;
+    return { status: status === "OPEN" && result.hasVoted ? "voted" : "not-open" } as const;
   }
   (await cookies()).set(cookieName, signSession(result.sessionId, voterSecret()), { ...cookieOptions, expires: expiresAt });
-  return "ok";
-
+  return { status: "ok", name: result.name, electionId: result.electionId, electionStatus: effectiveStatus(result) } as const;
 }
 
 export async function endVoterSession() {
