@@ -67,3 +67,18 @@ is invalidated when an administrator regenerates the key.
 Opening and scheduling through the admin UI are part of milestone M4. The
 Compose smoke test sets a test election's schedule directly in its disposable
 database to exercise the M3 flow.
+
+## Launch and results
+
+Use **Pelancaran** to open voting now, set a start and end in Malaysia time,
+or close an open election. The server evaluates the schedule on each request.
+An administrator can return an election to draft only before it receives a
+ballot. Opening a scheduled election early keeps its scheduled closing time.
+
+**Keputusan** refreshes turnout while visible. Candidate counts are hidden
+from administrators until close by default. An administrator can enable a
+live view. Once the election closes, publishing lets registered voters use
+their ID and key to view the results. The results page displays aggregate
+counts and abstentions. A tie at the selection cutoff flags all tied
+candidates for review. The audit log records launch, schedule, publication,
+and other administrative changes alongside anonymous vote events by voter code.

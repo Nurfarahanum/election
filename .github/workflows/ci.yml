@@ -3,7 +3,7 @@ name: Kopetro checks
 on:
   pull_request:
   push:
-    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3']
+    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3', 'kopetro/m4']
 
 permissions:
   contents: read
@@ -44,6 +44,7 @@ jobs:
           bash scripts/smoke-m3.sh
           docker compose exec -T postgres psql -U kopetro -d kopetro -c 'TRUNCATE "AdminLoginLimit";'
           bash scripts/smoke-m1.sh
+          bash scripts/smoke-m4.sh
       - if: failure()
         run: docker compose logs
       - if: always()

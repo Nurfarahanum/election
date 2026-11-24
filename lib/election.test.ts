@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ballotLocked, effectiveStatus } from "./election";
+import { ballotLocked, effectiveStatus, electionControls } from "./election";
 
 describe("ballot structure lock", () => {
   const startsAt = new Date("2026-11-24T01:00:00Z");
@@ -17,4 +17,11 @@ describe("ballot structure lock", () => {
   it("locks if a ballot exists even when the stored state is draft", () => {
     expect(ballotLocked({ ...scheduled, status: "DRAFT" }, 1)).toBe(true);
   });
+});
+
+it("only offers reset when no ballot exists and close only while open", () => {
+  const open = { status: "OPEN", startsAt: null, endsAt: null } as const;
+  expect(electionControls(open, 0)).toMatchObject({ canClose: true, canOpen: false, canReset: true });
+  expect(electionControls(open, 1).canReset).toBe(false);
+  expect(electionControls({ ...open, status: "CLOSED" }, 0)).toMatchObject({ canClose: false, canReset: true });
 });

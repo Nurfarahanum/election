@@ -4,6 +4,7 @@ import { activeElection, AdminInputError, withElectionLock } from "../../../lib/
 import { ballotCommand, editBallot } from "../../../lib/ballot-admin";
 import { deletePhoto, preparePhoto, savePhoto } from "../../../lib/candidate-photo";
 import { acceptsOrigin } from "../../../lib/request-security";
+import { changeElection, launchCommand } from "../../../lib/launch-admin";
 import { prisma } from "../../../lib/db";
 import { addVoters, prepareVoters, registeredVoters, updateVoter, voterCommand } from "../../../lib/voter-admin";
 import { parseImport, validateImport } from "../../../lib/voter-import";
@@ -39,6 +40,12 @@ export async function POST(request: Request) {
     }
 
     const { action } = input.data;
+    const launch = launchCommand.safeParse(fields);
+    if (launch.success) {
+      const message = await withElectionLock(election.id, (tx, lockedElection) =>
+        changeElection(tx, lockedElection, admin.id, launch.data));
+      return json({ message });
+    }
     if (action === "import-preview" || action === "import-commit") {
       const file = fileSchema.safeParse(fields.file);
       if (!file.success) throw new AdminInputError("Pilih fail import.");

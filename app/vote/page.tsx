@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { activeElection } from "../../lib/admin-election";
+import { electionResults } from "../../lib/election-results";
+import { RefreshData } from "../refresh-data";
+import { ResultCounts, Turnout } from "../results-view";
 import { prisma } from "../../lib/db";
 import { effectiveStatus } from "../../lib/election";
 import { findVoterSession, voterSessionId } from "../../lib/voter-auth";
@@ -16,11 +20,13 @@ export default async function VotePage({ searchParams }: { searchParams: Promise
   const voter = sessionId ? await findVoterSession(sessionId) : null;
 
   if (!voter) {
+    const election = await activeElection();
+    const resultsAvailable = election && effectiveStatus(election) === "CLOSED" && election.resultsPublished;
     const { ralat } = await searchParams;
     const message = ralat && Object.hasOwn(loginErrors, ralat) ? loginErrors[ralat as keyof typeof loginErrors] : null;
     return (
       <section className="card mx-auto my-6 max-w-[420px]" aria-labelledby="vote-login">
-        <h2 id="vote-login" className="text-lg font-bold">Log masuk untuk mengundi</h2>
+        <h2 id="vote-login" className="text-lg font-bold">{resultsAvailable ? "Log masuk untuk melihat keputusan" : "Log masuk untuk mengundi"}</h2>
         <p className="mut mt-2">Masukkan ID Pengundi dan Kunci Pengundi yang anda terima.</p>
         {message && <p role="alert" className="form-error mt-2">{message}</p>}
         <form method="post" action="/vote/login" className="mt-3 grid gap-3">
@@ -40,13 +46,29 @@ export default async function VotePage({ searchParams }: { searchParams: Promise
     );
   }
 
-  if (voter.hasVoted) return <VoteConfirmation name={voter.name} />;
-
   const election = await prisma.election.findUnique({ where: { id: voter.electionId } });
   const status = election && effectiveStatus(election);
+  const published = status === "CLOSED" && election?.resultsPublished
+    ? await electionResults(voter.electionId, "voter") : null;
+  if (voter.hasVoted || published?.results) {
+    return (
+      <>
+        <RefreshData />
+        {voter.hasVoted ? <VoteConfirmation name={voter.name} /> : <div className="mb-3"><VoterLogout /></div>}
+        {published?.results && (
+          <>
+            <h2 className="mb-3 text-lg font-bold">Keputusan</h2>
+            <Turnout turnout={published.turnout} />
+            <ResultCounts results={published.results} />
+          </>
+        )}
+      </>
+    );
+  }
   if (status !== "OPEN") {
     return (
       <section className="card mx-auto my-6 max-w-[420px]">
+        <RefreshData />
         <h2 className="mb-3 text-lg font-bold">{status === "CLOSED" ? "Undian sudah ditutup." : "Undian belum dibuka."}</h2>
         <VoterLogout />
       </section>
