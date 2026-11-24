@@ -43,6 +43,12 @@ async function flow(index) {
   };
 }
 
+// Voters arrive at the sign-in page before sending credentials. Time from that submission.
+await Promise.all(Array.from({ length: count }, async () => {
+  const response = await fetch(origin + "/vote", { signal: AbortSignal.timeout(15000) });
+  assert.equal(response.status, 200);
+  await response.arrayBuffer();
+}));
 const settled = await Promise.allSettled(Array.from({ length: count }, (_, index) => flow(index)));
 const errors = settled.filter(result => result.status === "rejected");
 const completed = settled.filter(result => result.status === "fulfilled").map(result => result.value);

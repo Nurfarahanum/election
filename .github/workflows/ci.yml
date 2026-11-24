@@ -59,8 +59,10 @@ jobs:
           bash scripts/smoke-m4.sh
           bash scripts/smoke-m5.sh
       - name: Verify mobile E2E and the 200-voter load
+        id: voter-tests
         run: bash scripts/test-m6.sh
       - name: Verify backup and database restore
+        if: ${{ !cancelled() && steps.voter-tests.outcome != 'skipped' }}
         run: bash scripts/smoke-backup.sh
       - if: failure()
         run: docker compose logs

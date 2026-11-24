@@ -27,8 +27,10 @@ db "TRUNCATE \"VoterLoginLimit\";
   FROM generate_series(1, 200) AS i;" >/dev/null
 
 docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt "$test_dir/root.crt" >/dev/null
-NODE_EXTRA_CA_CERTS="$test_dir/root.crt" node scripts/load-voters.mjs
+load_status=0
+NODE_EXTRA_CA_CERTS="$test_dir/root.crt" node scripts/load-voters.mjs || load_status=$?
 test "$(db "SELECT count(*) FROM \"Ballot\" WHERE \"electionId\"='$load';")" = 200
 test "$(db "SELECT count(*) FROM \"Voter\" WHERE \"electionId\"='$load' AND \"hasVoted\";")" = 200
 test "$(db "SELECT count(*) FROM \"BallotChoice\" WHERE \"positionId\"='$position';")" = 200
 echo 'Database verified 200 ballots, voters and choices.'
+exit "$load_status"

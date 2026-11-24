@@ -46,9 +46,8 @@ export default async function VotePage({ searchParams }: { searchParams: Promise
     );
   }
 
-  const election = await prisma.election.findUnique({ where: { id: voter.electionId } });
-  const status = election && effectiveStatus(election);
-  const published = status === "CLOSED" && election?.resultsPublished
+  const status = effectiveStatus(voter);
+  const published = status === "CLOSED" && voter.resultsPublished
     ? await electionResults(voter.electionId, "voter") : null;
   if (voter.hasVoted || published?.results) {
     return (
