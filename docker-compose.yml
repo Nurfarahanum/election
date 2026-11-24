@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://kopetro:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/kopetro
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      APP_ORIGIN: ${APP_ORIGIN:-https://localhost}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/admin/login').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => process.exitCode = 1)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: kopetro
+      POSTGRES_USER: kopetro
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kopetro", "-d", "kopetro"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      CADDY_SITE: ${CADDY_SITE:-localhost}
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
