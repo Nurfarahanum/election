@@ -9,6 +9,13 @@ services:
       SEED_DEMO: ${SEED_DEMO:-false}
       APP_ORIGIN: ${APP_ORIGIN:-https://localhost}
       CANDIDATE_PHOTO_DIR: /app/candidate-photos
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_REQUIRE_TLS: ${SMTP_REQUIRE_TLS:-true}
     volumes:
       - candidate_photos:/app/candidate-photos
     depends_on:
@@ -49,6 +56,12 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+
+  mailpit:
+    image: axllent/mailpit:v1.29
+    profiles: [mail-test]
+    ports:
+      - "127.0.0.1:8025:8025"
 
 volumes:
   candidate_photos:

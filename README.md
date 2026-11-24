@@ -82,3 +82,34 @@ their ID and key to view the results. The results page displays aggregate
 counts and abstentions. A tie at the selection cutoff flags all tied
 candidates for review. The audit log records launch, schedule, publication,
 and other administrative changes alongside anonymous vote events by voter code.
+
+## Election mail and downloads
+
+Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, and your provider's
+`SMTP_USER` and `SMTP_PASSWORD` in `.env`. Use `SMTP_SECURE=true` for
+implicit TLS (typically port 465). The default requires STARTTLS for
+non-implicit connections. The app accepts a sender address without a
+display name.
+
+For local testing only, start the optional Mailpit profile and open its inbox
+at <http://127.0.0.1:8025>.
+
+```sh
+SMTP_HOST=mailpit SMTP_PORT=1025 SMTP_FROM=voting@example.com \
+  SMTP_REQUIRE_TLS=false docker compose --profile mail-test up --build --wait
+```
+
+In **Pengundi**, choose one unvoted voter, all unvoted voters, or the
+no-email group for printed slips. Invitation and slip generation issue fresh
+keys and revoke old credentials for the affected voters. Invitations and
+reminders go only to unvoted voters with email. Reminders preserve the
+existing key. For partial SMTP failures, retry only the affected voter
+codes. SMTP acceptance confirms acceptance by the relay. An ambiguous
+SMTP disconnect or a database failure after relay acceptance may require
+issuing a fresh invitation for that voter. Downloaded slips and invitation
+messages contain voter credentials. Handle them as confidential material.
+
+Admin exports are available on **Keputusan**, **Pengundi**, and **Log audit**.
+Results exports follow the live-result visibility setting. Voter and audit
+CSV files contain no voter keys. CSV preserves Unicode names, and the current
+PDF font substitutes unsupported glyphs in printed names and headings.

@@ -68,3 +68,5 @@ code { background: var(--soft); border-radius: 4px; padding: 1px 6px; white-spac
 .result-bar::-moz-progress-bar { background: var(--mut); }
 .result-leading::-webkit-progress-value { background: var(--ok); }
 .result-leading::-moz-progress-bar { background: var(--ok); }
+
+.distribution-select { width: 100%; min-width: 0; min-height: 44px; color: var(--ink); background: var(--bg); border: 1px solid var(--input-line); border-radius: 6px; padding: 8px 10px; }

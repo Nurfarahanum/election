@@ -3,7 +3,7 @@ name: Kopetro checks
 on:
   pull_request:
   push:
-    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3', 'kopetro/m4']
+    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3', 'kopetro/m4', 'kopetro/m5']
 
 permissions:
   contents: read
@@ -28,6 +28,11 @@ jobs:
     env:
       ADMIN_EMAIL: admin@example.com
       SEED_DEMO: 'true'
+      COMPOSE_PROFILES: mail-test
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      SMTP_FROM: voting@example.com
+      SMTP_REQUIRE_TLS: 'false'
     steps:
       - uses: actions/checkout@v5
       - name: Generate ephemeral test credentials
@@ -38,13 +43,14 @@ jobs:
             echo "$name=$value" >> "$GITHUB_ENV"
           done
       - run: docker compose up --build --wait
-      - name: Verify admin workflows and concurrent voting over HTTPS
+      - name: Verify election workflows, SMTP and exports over HTTPS
         run: |
           bash scripts/smoke-m2.sh
           bash scripts/smoke-m3.sh
           docker compose exec -T postgres psql -U kopetro -d kopetro -c 'TRUNCATE "AdminLoginLimit";'
           bash scripts/smoke-m1.sh
           bash scripts/smoke-m4.sh
+          bash scripts/smoke-m5.sh
       - if: failure()
         run: docker compose logs
       - if: always()

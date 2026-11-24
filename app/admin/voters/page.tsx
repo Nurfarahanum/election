@@ -3,6 +3,8 @@ import { currentAdmin } from "../../../lib/admin-auth";
 import { activeElection } from "../../../lib/admin-election";
 import { prisma } from "../../../lib/db";
 import { AdminNav } from "../admin-nav";
+import { effectiveStatus } from "../../../lib/election";
+import { DistributionControls } from "./distribution-controls";
 import { VoterManager } from "./voter-manager";
 
 export default async function VotersPage() {
@@ -18,6 +20,12 @@ export default async function VotersPage() {
     <>
       <AdminNav current="/admin/voters" />
       <h2 className="sr-only">Pengundi</h2>
+      <div className="mb-3">
+        <a className="ghost inline-flex items-center" href="/admin/export/pengundi.csv" download>Muat turun senarai pengundi (CSV)</a>
+      </div>
+      {effectiveStatus(election) !== "CLOSED" && voters.some(voter => !voter.hasVoted) && (
+        <DistributionControls key={election.id} electionId={election.id} voters={voters.filter(voter => !voter.hasVoted)} />
+      )}
       <VoterManager key={election.id} electionId={election.id} voters={voters} />
     </>
   );
