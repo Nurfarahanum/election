@@ -34,7 +34,7 @@ export async function deletePhoto(path: string | null) {
   const filename = path.slice(photoPrefix.length);
   if (!filenamePattern.test(filename)) return;
   try {
-    await unlink(/*turbopackIgnore: true*/ join(photoDirectory(), filename));
+    await unlink(/*turbopackIgnore: true*/ join(/*turbopackIgnore: true*/ photoDirectory(), filename));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") console.error("Candidate photo cleanup failed.");
   }

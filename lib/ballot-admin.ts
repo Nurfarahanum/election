@@ -1,7 +1,6 @@
 import type { Election, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { AdminInputError, auditAdmin } from "./admin-election";
-import { deletePhoto, savePhoto } from "./candidate-photo";
 import { ballotLocked } from "./election";
 
 const id = z.uuid();
@@ -23,9 +22,9 @@ export const ballotCommand = z.discriminatedUnion("action", [
 
 export async function editBallot(
   tx: Prisma.TransactionClient, election: Election, adminId: string,
-  command: z.infer<typeof ballotCommand>, photo: Buffer | null,
+  command: z.infer<typeof ballotCommand>, photo: string | null,
 ): Promise<string[]> {
-  if (ballotLocked(election, await tx.ballot.count({ where: { electionId: election.id } }))) {
+  if (command.action !== "election-update" && ballotLocked(election, await tx.ballot.count({ where: { electionId: election.id } }))) {
     throw new AdminInputError("Ballot dikunci kerana undian sudah dibuka atau ada undi masuk.", 409);
   }
 
@@ -60,7 +59,7 @@ export async function editBallot(
       const sortOrder = Math.max(-1, ...position.candidates.map((candidate) => candidate.sortOrder)) + 1;
       const { name, bio } = command;
       const candidate = await tx.candidate.create({
-        data: { positionId: position.id, name, bio, sortOrder, photoPath: photo ? await savePhoto(photo) : null },
+        data: { positionId: position.id, name, bio, sortOrder, photoPath: photo },
       });
       detail = { ...detail, candidateId: candidate.id, name, photo: Boolean(photo) };
     }
@@ -72,7 +71,7 @@ export async function editBallot(
     detail = { candidateId: candidate.id };
     if (command.action === "candidate-update") {
       const { name, bio } = command;
-      const photoPath = photo ? await savePhoto(photo) : candidate.photoPath;
+      const photoPath = photo ?? candidate.photoPath;
       await tx.candidate.update({ where: { id: candidate.id }, data: { name, bio, photoPath } });
       detail = { ...detail, name, photo: Boolean(photo) };
     } else if (command.action === "candidate-remove") {
@@ -84,8 +83,4 @@ export async function editBallot(
   }
   await auditAdmin(tx, election.id, adminId, command.action.toUpperCase().replaceAll("-", "_"), detail);
   return unusedPhotos;
-}
-
-export async function clearUnusedPhotos(paths: string[]) {
-  await Promise.all(paths.map(deletePhoto));
 }

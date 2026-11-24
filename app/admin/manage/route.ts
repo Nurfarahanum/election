@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { acceptsOrigin, currentAdmin } from "../../../lib/admin-auth";
 import { activeElection, AdminInputError, withElectionLock } from "../../../lib/admin-election";
-import { ballotCommand, clearUnusedPhotos, editBallot } from "../../../lib/ballot-admin";
-import { preparePhoto } from "../../../lib/candidate-photo";
+import { ballotCommand, editBallot } from "../../../lib/ballot-admin";
+import { deletePhoto, preparePhoto, savePhoto } from "../../../lib/candidate-photo";
 import { prisma } from "../../../lib/db";
 import { addVoters, prepareVoters, registeredVoters, updateVoter, voterCommand } from "../../../lib/voter-admin";
 import { parseImport, validateImport } from "../../../lib/voter-import";
@@ -68,10 +68,24 @@ export async function POST(request: Request) {
     if (!ballot.success) throw new AdminInputError("Semak maklumat yang diisi dan cuba lagi.");
     const upload = fileSchema.safeParse(fields.photo);
     const acceptsPhoto = ballot.data.action === "candidate-add" || ballot.data.action === "candidate-update";
-    const photo = acceptsPhoto && upload.success && upload.data.name ? await preparePhoto(upload.data) : null;
-    const oldPhotos = await withElectionLock(election.id, (tx, lockedElection) =>
-      editBallot(tx, lockedElection, admin.id, ballot.data, photo));
-    await clearUnusedPhotos(oldPhotos);
+    const photo = acceptsPhoto && upload.success && upload.data.name
+      ? await savePhoto(await preparePhoto(upload.data)) : null;
+    try {
+      const oldPhotos = await withElectionLock(election.id, (tx, lockedElection) =>
+        editBallot(tx, lockedElection, admin.id, ballot.data, photo));
+      await Promise.all(oldPhotos.map(deletePhoto));
+    } catch (error) {
+      if (photo) {
+        // Leave the file intact if the commit result cannot be confirmed.
+        try {
+          const reference = await prisma.candidate.findFirst({ where: { photoPath: photo }, select: { id: true } });
+          if (!reference) await deletePhoto(photo);
+        } catch {
+          console.error("Could not check the candidate photo reference.");
+        }
+      }
+      throw error;
+    }
     return json({ message: "Perubahan disimpan." });
   } catch (error) {
     if (error instanceof AdminInputError) return json({ error: error.message }, error.status);

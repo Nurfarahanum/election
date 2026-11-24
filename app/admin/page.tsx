@@ -37,12 +37,10 @@ export default async function Admin() {
           <h3 className="grow font-bold">Tetapan pilihan raya</h3>
           <span className="chip">Status: {labels[effectiveStatus(election, now)]}</span>
         </div>
-        {locked ? <p>{election.name} · {election.orgName}</p> : (
-          <BallotForm key={JSON.stringify([election.name, election.orgName])} electionId={election.id} action="election-update" label="Simpan">
+        <BallotForm key={JSON.stringify([election.name, election.orgName])} electionId={election.id} action="election-update" label="Simpan">
             <label>Nama organisasi<input name="orgName" defaultValue={election.orgName} maxLength={120} required /></label>
             <label>Tajuk pilihan raya<input name="name" defaultValue={election.name} maxLength={120} required /></label>
-          </BallotForm>
-        )}
+        </BallotForm>
       </section>
 
       {positions.map((position) => (

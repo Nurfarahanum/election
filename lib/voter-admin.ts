@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AdminInputError, auditAdmin } from "./admin-election";
 import { validateImport, voterFields, type VoterFields } from "./voter-import";
 import { issueVoterKey } from "./voter-keys";
+import { verifyCredential } from "./credentials";
 
 export type IssuedKey = { code: string; name: string; key: string };
 export const voterCommand = z.discriminatedUnion("action", [
@@ -61,9 +62,13 @@ export async function updateVoter(
   voterId: string, regenerated: Awaited<ReturnType<typeof issueVoterKey>> | null,
 ): Promise<IssuedKey[]> {
   const voter = await tx.voter.findFirst({
-    where: { id: voterId, electionId }, select: { id: true, code: true, name: true },
+    where: { id: voterId, electionId }, select: { id: true, code: true, name: true, keyHash: true, hasVoted: true },
   });
   if (!voter) throw new AdminInputError("Pengundi tidak ditemui.", 404);
+  if (voter.hasVoted) throw new AdminInputError("Pengundi ini sudah mengundi.", 409);
+  while (regenerated && await verifyCredential(voter.keyHash, regenerated.key)) {
+    regenerated = await issueVoterKey();
+  }
   const where = { id: voter.id, hasVoted: false };
   const result = regenerated
     ? await tx.voter.updateMany({ where, data: { keyHash: regenerated.keyHash } })
