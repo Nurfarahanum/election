@@ -149,3 +149,8 @@ model VoterLoginLimit {
 
   @@index([expiresAt])
 }
+
+model PreviewMedia {
+  filename String @id
+  bytes    Bytes
+}

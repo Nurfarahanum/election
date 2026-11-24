@@ -50,7 +50,7 @@ export function BallotForm({ electionId, action, target, children, label, plain 
   );
 }
 
-export function PhotoInput() {
+export function PhotoInput({ maxMb }: { maxMb: number }) {
   const [preview, setPreview] = useState<string>();
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -70,7 +70,7 @@ export function PhotoInput() {
         <input ref={input} name="photo" type="file" accept="image/jpeg,image/png,image/webp"
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
-            setPreview(file && file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
+            setPreview(file && file.type.startsWith("image/") && file.size <= maxMb * 1024 * 1024
               ? URL.createObjectURL(file) : undefined);
           }} />
       </label>
@@ -81,7 +81,7 @@ export function PhotoInput() {
           <figcaption className="mut">Pratonton potongan segi empat sama</figcaption>
         </figure>
       )}
-      <small className="mut">JPEG, PNG atau WebP, maksimum 5 MB.</small>
+      <small className="mut">JPEG, PNG atau WebP, maksimum {maxMb} MB.</small>
     </div>
   );
 }

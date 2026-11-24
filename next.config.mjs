@@ -2,6 +2,10 @@
 const config = {
   poweredByHeader: false,
   serverExternalPackages: ["@node-rs/argon2"],
+  outputFileTracingIncludes: {
+    "/admin/distribute": ["./node_modules/@fontsource/public-sans/files/public-sans-latin-400-normal.woff"],
+    "/admin/export/*": ["./node_modules/@fontsource/public-sans/files/public-sans-latin-400-normal.woff"],
+  },
   async headers() {
     return [{
       source: "/:path*",
