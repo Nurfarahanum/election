@@ -110,7 +110,7 @@ test("admin creates a ballot, imports three voters, and publishes their results"
   await page.getByLabel("Emel").fill(adminEmail);
   await page.getByLabel("Kata laluan").fill(adminPassword);
   await page.getByRole("button", { name: "Log masuk", exact: true }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Log masuk gagal" })).toBeVisible();
   await page.getByLabel("Emel").fill(adminEmail);
   await page.getByLabel("Kata laluan").fill(nextPassword);
   await page.getByRole("button", { name: "Log masuk", exact: true }).click();
