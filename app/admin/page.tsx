@@ -3,11 +3,9 @@ import { redirect } from "next/navigation";
 import { currentAdmin } from "../../lib/admin-auth";
 import { activeElection } from "../../lib/admin-election";
 import { prisma } from "../../lib/db";
-import { ballotLocked, effectiveStatus } from "../../lib/election";
+import { ballotLocked, effectiveStatus, electionLabels } from "../../lib/election";
 import { AdminNav } from "./admin-nav";
 import { BallotForm, PhotoInput } from "./ballot-form";
-
-const labels = { DRAFT: "Draf", SCHEDULED: "Dijadualkan", OPEN: "Sedang dibuka", CLOSED: "Ditutup" };
 
 export default async function Admin() {
   const admin = await currentAdmin();
@@ -35,7 +33,7 @@ export default async function Admin() {
       <section className="card">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="grow font-bold">Tetapan pilihan raya</h3>
-          <span className="chip">Status: {labels[effectiveStatus(election, now)]}</span>
+          <span className="chip">Status: {electionLabels[effectiveStatus(election, now)]}</span>
         </div>
         <BallotForm key={JSON.stringify([election.name, election.orgName])} electionId={election.id} action="election-update" label="Simpan">
             <label>Nama organisasi<input name="orgName" defaultValue={election.orgName} maxLength={120} required /></label>

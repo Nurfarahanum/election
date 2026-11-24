@@ -61,3 +61,10 @@ code { background: var(--soft); border-radius: 4px; padding: 1px 6px; white-spac
 .vote-option { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
 .vote-option:has(input:checked) { background: var(--soft); border-color: var(--acc); }
 .vote-option input { flex: none; width: 20px; height: 20px; min-height: 0; margin-top: 2px; padding: 0; accent-color: var(--acc); }
+
+.result-bar { display: block; width: 100%; height: 22px; margin-top: 4px; border: 0; border-radius: 4px; overflow: hidden; color: var(--mut); background: var(--soft); }
+.result-bar::-webkit-progress-bar { background: var(--soft); }
+.result-bar::-webkit-progress-value { background: var(--mut); }
+.result-bar::-moz-progress-bar { background: var(--mut); }
+.result-leading::-webkit-progress-value { background: var(--ok); }
+.result-leading::-moz-progress-bar { background: var(--ok); }

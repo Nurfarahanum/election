@@ -102,8 +102,9 @@ export async function startVoterSession(code: string, key: string) {
     await tx.voterLoginLimit.delete({ where: { key: bucket } });
     const current = await tx.election.findUniqueOrThrow({ where: { id: election.id } });
     const status = effectiveStatus(current);
-    if (status !== "OPEN") return { status: status === "CLOSED" ? "closed" : "not-open" } as const;
-    if (voter.hasVoted) return { status: "voted" } as const;
+    const publishedResults = status === "CLOSED" && current.resultsPublished;
+    if (status !== "OPEN" && !publishedResults) return { status: status === "CLOSED" ? "closed" : "not-open" } as const;
+    if (status === "OPEN" && voter.hasVoted) return { status: "voted" } as const;
 
     const expiresAt = new Date(Date.now() + sessionLifetime);
     if (previous) await tx.voterSession.deleteMany({ where: { id: previous } });
