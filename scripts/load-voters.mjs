@@ -12,7 +12,7 @@ async function flow(index) {
   const start = performance.now();
   const options = { redirect: "manual", signal: AbortSignal.timeout(15000) };
   const login = await fetch(origin + "/vote/login", {
-    ...options, method: "POST", headers: { Origin: origin },
+    ...options, method: "POST", headers: { Origin: origin, "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ code, key }),
   });
   assert.equal(login.status, 303, `${code} login status`);

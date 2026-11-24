@@ -9,7 +9,7 @@ const loginFailed = "/admin/login?ralat=1";
 
 export async function POST(request: Request) {
   if (!acceptsOrigin(request)) return new Response(null, { status: 403 });
-  if (request.headers.get("content-type") !== "application/x-www-form-urlencoded") {
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/x-www-form-urlencoded") {
     return new Response(null, { status: 415 });
   }
 

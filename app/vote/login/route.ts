@@ -3,7 +3,7 @@ import { allowVoterIp, startVoterSession, voterCode, voterKey } from "../../../l
 
 export async function POST(request: Request) {
   if (!acceptsOrigin(request)) return new Response(null, { status: 403 });
-  if (request.headers.get("content-type") !== "application/x-www-form-urlencoded") {
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/x-www-form-urlencoded") {
     return new Response(null, { status: 415 });
   }
   if (!await allowVoterIp(requestIp(request))) return redirectAfterPost("/vote?ralat=invalid");
