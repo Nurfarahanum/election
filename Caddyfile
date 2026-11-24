@@ -3,6 +3,9 @@
   request_body /admin/session {
     max_size 16KB
   }
+  request_body /admin/manage {
+    max_size 6MB
+  }
   reverse_proxy app:3000 {
     header_up X-Kopetro-Client-IP {remote_host}
   }

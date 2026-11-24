@@ -40,3 +40,20 @@ body { background: var(--bg); color: var(--ink); font: 16px/1.5 "Public Sans", s
 input { width: 100%; color: var(--ink); background: var(--bg); border: 1px solid var(--input-line); border-radius: 6px; padding: 8px 10px; min-height: 44px; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+.admin-tab { border-bottom: 3px solid transparent; color: var(--mut); padding: 10px 14px; }
+.admin-tab[aria-current="page"] { border-color: var(--acc); color: var(--ink); font-weight: 600; }
+.manage-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 10px; }
+.manage-form > label, .manage-form > div { flex: 1 1 160px; min-width: 0; }
+.manage-form label { display: grid; gap: 4px; }
+.manage-form input, .manage-form textarea { min-width: 0; }
+.manage-form textarea { width: 100%; min-height: 44px; color: var(--ink); background: var(--bg); border: 1px solid var(--input-line); border-radius: 6px; padding: 8px 10px; }
+input[type=file]::file-selector-button { margin-right: 8px; cursor: pointer; font-weight: 600; }
+.ghost { color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; min-height: 36px; cursor: pointer; }
+button:disabled { opacity: .65; cursor: default; }
+summary { color: var(--mut); cursor: pointer; width: fit-content; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 7px 6px; border-top: 1px solid var(--line); }
+code { background: var(--soft); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.form-error { color: var(--bad); font-weight: 600; }

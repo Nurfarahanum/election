@@ -8,6 +8,9 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       SEED_DEMO: ${SEED_DEMO:-false}
       APP_ORIGIN: ${APP_ORIGIN:-https://localhost}
+      CANDIDATE_PHOTO_DIR: /app/candidate-photos
+    volumes:
+      - candidate_photos:/app/candidate-photos
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,6 +51,7 @@ services:
       - caddy_config:/config
 
 volumes:
+  candidate_photos:
   postgres_data:
   caddy_data:
   caddy_config:

@@ -34,3 +34,20 @@ For source checks, use Node.js 24 and run `npm ci`, `npm run lint`,
 For a public HTTPS deployment, set `CADDY_SITE` to your public hostname,
 set `APP_ORIGIN` to its HTTPS origin and point DNS to the server. Caddy
 needs access to ports 80 and 443.
+
+## Manage a ballot and voter list
+
+The **Ballot** tab manages positions, maximum choices, candidates and candidate
+photos. Photos are cropped to a centered square and written as 400×400 WebP
+files to the `candidate_photos` Compose volume. Back up that volume with the
+database if you need to retain photos.
+
+In **Pengundi**, upload a UTF-8 CSV or the first worksheet of an XLSX file
+with two columns, `nama,emel`. A header row and the second column are optional.
+Each upload supports up to 500 data rows and 1 MiB. Preview and correct any
+errors before importing. Duplicates match by email (case-insensitive) or, for
+entries without email, by normalized name. An import is applied as one batch.
+
+Keys appear only in the successful creation or regeneration response. Record
+them before dismissing the list or leaving the page. Regeneration invalidates
+the old key. The voter list and audit records contain no plaintext keys.
