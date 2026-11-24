@@ -138,17 +138,18 @@ export async function startVoterSession(code: string, key: string, ip: string) {
   const previous = await voterSessionId();
   const sessionId = randomUUID();
   const expiresAt = new Date(Date.now() + sessionLifetime);
-  // The rate check and session insert are atomic. A concurrent lockout or key rotation wins.
+  // The rate check and session insert share one statement. Successful logins with no failures leave no code counter.
   const [result] = await prisma.$queryRaw<{
     status: ElectionStatus; startsAt: Date | null; endsAt: Date | null; hasVoted: boolean;
     sessionId: string | null; name: string; electionId: string;
   }[]>`
-    WITH allowed AS (
-      INSERT INTO "VoterLoginLimit" ("key", "attempts", "expiresAt")
-      VALUES (${bucket}, 0, NOW())
-      ON CONFLICT ("key") DO UPDATE SET "attempts" = 0, "expiresAt" = EXCLUDED."expiresAt"
-      WHERE "VoterLoginLimit"."expiresAt" <= NOW() OR "VoterLoginLimit"."attempts" < ${maxCodeFailures}
+    WITH reset AS (
+      UPDATE "VoterLoginLimit" SET "attempts" = 0, "expiresAt" = NOW()
+      WHERE "key" = ${bucket} AND ("expiresAt" <= NOW() OR "attempts" < ${maxCodeFailures})
       RETURNING "key"
+    ), allowed AS (
+      SELECT 1 WHERE EXISTS (SELECT 1 FROM reset)
+        OR NOT EXISTS (SELECT 1 FROM "VoterLoginLimit" WHERE "key" = ${bucket})
     ), verified AS MATERIALIZED (
       SELECT v.id, v.name, v."electionId", v."hasVoted", e.status, e."startsAt", e."endsAt", e."resultsPublished"
       FROM allowed CROSS JOIN "Voter" v JOIN "Election" e ON e.id = v."electionId"

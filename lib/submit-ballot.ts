@@ -7,6 +7,7 @@ import { credentialFingerprint } from "./voter-auth";
 type LockedBallot = {
   electionId: string; status: ElectionStatus; startsAt: Date | null; endsAt: Date | null;
   voterId: string; hasVoted: boolean; keyHash: string; credentialFingerprint: string;
+  positions: { id: string; maxChoices: number; candidates: { id: string }[] }[];
 };
 
 export async function submitBallot(sessionId: string, selection: Selection) {
@@ -14,7 +15,13 @@ export async function submitBallot(sessionId: string, selection: Selection) {
     // Concurrent voters share the election lock. Administrative changes take it exclusively.
     const [voter] = await tx.$queryRaw<LockedBallot[]>`
       SELECT e.id AS "electionId", e.status, e."startsAt", e."endsAt", v.id AS "voterId", v."hasVoted",
-             v."keyHash", s."credentialFingerprint"
+             v."keyHash", s."credentialFingerprint",
+             COALESCE((
+               SELECT json_agg(json_build_object('id', p.id, 'maxChoices', p."maxChoices", 'candidates',
+                 COALESCE((SELECT json_agg(json_build_object('id', c.id))
+                           FROM "Candidate" c WHERE c."positionId" = p.id), '[]'::json)))
+               FROM "Position" p WHERE p."electionId" = e.id
+             ), '[]'::json) AS positions
       FROM "VoterSession" s JOIN "Voter" v ON v.id = s."voterId"
       JOIN "Election" e ON e.id = v."electionId"
       WHERE s.id = ${sessionId}::uuid AND s."expiresAt" > clock_timestamp()
@@ -24,14 +31,7 @@ export async function submitBallot(sessionId: string, selection: Selection) {
     if (voter.hasVoted) return "voted" as const;
     if (effectiveStatus(voter) !== "OPEN") return "closed" as const;
 
-    const positions = await tx.$queryRaw<{ id: string; maxChoices: number; candidates: { id: string }[] }[]>`
-      SELECT p.id, p."maxChoices",
-             COALESCE(json_agg(json_build_object('id', c.id)) FILTER (WHERE c.id IS NOT NULL), '[]'::json) AS candidates
-      FROM "Position" p LEFT JOIN "Candidate" c ON c."positionId" = p.id
-      WHERE p."electionId" = ${voter.electionId}::uuid
-      GROUP BY p.id
-    `;
-    if (!validateSelection(selection, positions)) return "invalid" as const;
+    if (!validateSelection(selection, voter.positions)) return "invalid" as const;
 
     const choices = selection.flatMap(({ positionId, candidateIds }) =>
       candidateIds.map(candidateId => ({ positionId, candidateId })),
