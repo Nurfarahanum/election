@@ -36,6 +36,9 @@ const actions: Record<string, string> = {
   CANDIDATE_REMOVE: "Calon dibuang.",
   CANDIDATE_PHOTO_REMOVE: "Foto calon dibuang.",
   ADMIN_LOGIN: "Admin log masuk.",
+  ADMIN_PASSWORD_CHANGED: "Kata laluan admin ditukar.",
+  BRANDING_UPDATE: "Penjenamaan dikemas kini.",
+  BRANDING_RESET: "Penjenamaan lalai dipulihkan.",
   ADMIN_LOGOUT: "Admin log keluar.",
 };
 const pageSize = 50;

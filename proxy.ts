@@ -18,4 +18,7 @@ export function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/", "/admin", "/admin/login", "/admin/voters", "/admin/launch", "/admin/results", "/admin/audit", "/vote"] };
+export const config = { matcher: [
+  "/", "/vote", "/admin", "/admin/login", "/admin/voters", "/admin/launch", "/admin/results", "/admin/audit",
+  "/admin/account", "/admin/branding",
+] };

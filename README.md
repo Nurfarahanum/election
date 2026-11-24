@@ -113,3 +113,46 @@ Admin exports are available on **Keputusan**, **Pengundi**, and **Log audit**.
 Results exports follow the live-result visibility setting. Voter and audit
 CSV files contain no voter keys. CSV preserves Unicode names, and the current
 PDF font substitutes unsupported glyphs in printed names and headings.
+
+## Deploy on a VPS
+
+1. Install Docker Engine and the Compose v2 plugin on a supported Linux VPS.
+   Assign a hostname and point its DNS records to the server. Allow inbound
+   TCP 80 and 443 for Caddy and restrict SSH access to administrators.
+2. Clone the approved release and copy `.env.example` to `.env`. Restrict
+   read access with `chmod 600 .env`. Set `SEED_DEMO=false`, generate
+   independent random database and session secrets, and configure SMTP.
+   Set `CADDY_SITE` to the public hostname and `APP_ORIGIN` to its matching
+   HTTPS origin. Caddy uses the direct client IP for rate limits. Keep its
+   backend and PostgreSQL ports on the Compose network.
+3. Start the stack and inspect it.
+
+   ```sh
+   docker compose up -d --build --wait
+   docker compose ps
+   docker compose logs --tail=100 app caddy
+   ```
+
+4. Sign in at `/admin/login`, change the initial password under **Tukar kata
+   laluan**, and verify the election settings and SMTP sender before the AGM.
+   Password changes revoke existing admin sessions. The bootstrap password
+   in `.env` is used only to create an account.
+5. Schedule nightly backups and rehearse a restore to a separate Compose
+   project. See [Backup and restore](docs/restore.md).
+
+### Test a disposable stack
+
+With test credentials in the environment, start Compose, run `npm ci` and
+`npx playwright install chromium`, then run:
+
+```sh
+KOPETRO_DISPOSABLE_TEST_DB=1 bash scripts/test-m6.sh
+KOPETRO_DISPOSABLE_TEST_DB=1 bash scripts/smoke-backup.sh
+```
+
+The test runner changes election state and creates synthetic voter records.
+Use a fresh disposable database. The load benchmark starts 200 simultaneous
+voters and measures the HTTPS journey from submitted credentials to the
+successful vote response that displays confirmation. The browser receives
+the ballot in the sign-in response. The benchmark verifies every durable
+receipt by reopening the page and reports p95 in milliseconds.

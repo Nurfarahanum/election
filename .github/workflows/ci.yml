@@ -3,7 +3,7 @@ name: Kopetro checks
 on:
   pull_request:
   push:
-    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3', 'kopetro/m4', 'kopetro/m5']
+    branches: [main, 'kopetro/m1', 'kopetro/m2', 'kopetro/m3', 'kopetro/m4', 'kopetro/m5', 'kopetro/m6']
 
 permissions:
   contents: read
@@ -32,6 +32,7 @@ jobs:
       SMTP_HOST: mailpit
       SMTP_PORT: '1025'
       SMTP_FROM: voting@example.com
+      KOPETRO_DISPOSABLE_TEST_DB: '1'
       SMTP_REQUIRE_TLS: 'false'
     steps:
       - uses: actions/checkout@v5
@@ -42,6 +43,12 @@ jobs:
             echo "::add-mask::$value"
             echo "$name=$value" >> "$GITHUB_ENV"
           done
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: docker compose up --build --wait
       - name: Verify election workflows, SMTP and exports over HTTPS
         run: |
@@ -51,6 +58,12 @@ jobs:
           bash scripts/smoke-m1.sh
           bash scripts/smoke-m4.sh
           bash scripts/smoke-m5.sh
+      - name: Verify mobile E2E and the 200-voter load
+        id: voter-tests
+        run: bash scripts/test-m6.sh
+      - name: Verify backup and database restore
+        if: ${{ !cancelled() && steps.voter-tests.outcome != 'skipped' }}
+        run: bash scripts/smoke-backup.sh
       - if: failure()
         run: docker compose logs
       - if: always()

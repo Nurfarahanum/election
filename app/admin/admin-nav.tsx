@@ -4,6 +4,7 @@ const tabs = [
   { href: "/admin", name: "Ballot" }, { href: "/admin/voters", name: "Pengundi" },
   { href: "/admin/launch", name: "Pelancaran" }, { href: "/admin/results", name: "Keputusan" },
   { href: "/admin/audit", name: "Log audit" },
+  { href: "/admin/branding", name: "Penjenamaan" },
 ];
 
 export function AdminNav({ current }: { current: string }) {
@@ -15,9 +16,12 @@ export function AdminNav({ current }: { current: string }) {
             className="admin-tab">{name}</Link>
         ))}
       </nav>
-      <form method="post" action="/admin/logout" className="pb-1">
+      <div className="flex flex-wrap gap-2 pb-1">
+        <Link href="/admin/account" className="ghost inline-flex items-center" aria-current={current === "/admin/account" ? "page" : undefined}>Tukar kata laluan</Link>
+        <form method="post" action="/admin/logout">
         <button className="ghost" type="submit">Keluar</button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
